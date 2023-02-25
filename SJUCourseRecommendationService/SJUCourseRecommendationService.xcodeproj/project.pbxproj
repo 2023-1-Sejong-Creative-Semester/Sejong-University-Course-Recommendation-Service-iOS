@@ -7,18 +7,31 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C5BBF5E52978365400E926A2 /* AppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5BBF5E42978365400E926A2 /* AppView.swift */; };
+		C5BBF5E7297836A800E926A2 /* StartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5BBF5E6297836A800E926A2 /* StartView.swift */; };
+		C5BBF5E9297836B200E926A2 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5BBF5E8297836B200E926A2 /* MainView.swift */; };
+		C5BBF5EB2978397D00E926A2 /* UserInformationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5BBF5EA2978397D00E926A2 /* UserInformationView.swift */; };
+		C5BBF5ED297839D100E926A2 /* ModifyInformationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5BBF5EC297839D100E926A2 /* ModifyInformationView.swift */; };
+		C5BF1AE229A9DC8200A0977E /* SearchAptitudeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5BF1AE129A9DC8200A0977E /* SearchAptitudeView.swift */; };
 		C5C074F329782A1A001B559F /* SJUCourseRecommendationServiceApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5C074F229782A1A001B559F /* SJUCourseRecommendationServiceApp.swift */; };
-		C5C074F529782A1A001B559F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5C074F429782A1A001B559F /* ContentView.swift */; };
 		C5C074F729782A1B001B559F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C5C074F629782A1B001B559F /* Assets.xcassets */; };
 		C5C074FA29782A1B001B559F /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C5C074F929782A1B001B559F /* Preview Assets.xcassets */; };
+		C5EFABB029A9E89E0006E174 /* AptitudeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5EFABAF29A9E89E0006E174 /* AptitudeDetailView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		C5BBF5E32978307000E926A2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		C5BBF5E42978365400E926A2 /* AppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppView.swift; sourceTree = "<group>"; };
+		C5BBF5E6297836A800E926A2 /* StartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartView.swift; sourceTree = "<group>"; };
+		C5BBF5E8297836B200E926A2 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
+		C5BBF5EA2978397D00E926A2 /* UserInformationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserInformationView.swift; sourceTree = "<group>"; };
+		C5BBF5EC297839D100E926A2 /* ModifyInformationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModifyInformationView.swift; sourceTree = "<group>"; };
+		C5BF1AE129A9DC8200A0977E /* SearchAptitudeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchAptitudeView.swift; sourceTree = "<group>"; };
 		C5C074EF29782A1A001B559F /* SJUCourseRecommendationService.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SJUCourseRecommendationService.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C5C074F229782A1A001B559F /* SJUCourseRecommendationServiceApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SJUCourseRecommendationServiceApp.swift; sourceTree = "<group>"; };
-		C5C074F429782A1A001B559F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		C5C074F629782A1B001B559F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C5C074F929782A1B001B559F /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		C5EFABAF29A9E89E0006E174 /* AptitudeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AptitudeDetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,8 +64,15 @@
 		C5C074F129782A1A001B559F /* SJUCourseRecommendationService */ = {
 			isa = PBXGroup;
 			children = (
+				C5BBF5E32978307000E926A2 /* Info.plist */,
 				C5C074F229782A1A001B559F /* SJUCourseRecommendationServiceApp.swift */,
-				C5C074F429782A1A001B559F /* ContentView.swift */,
+				C5BBF5E42978365400E926A2 /* AppView.swift */,
+				C5BBF5E6297836A800E926A2 /* StartView.swift */,
+				C5BF1AE129A9DC8200A0977E /* SearchAptitudeView.swift */,
+				C5EFABAF29A9E89E0006E174 /* AptitudeDetailView.swift */,
+				C5BBF5EA2978397D00E926A2 /* UserInformationView.swift */,
+				C5BBF5EC297839D100E926A2 /* ModifyInformationView.swift */,
+				C5BBF5E8297836B200E926A2 /* MainView.swift */,
 				C5C074F629782A1B001B559F /* Assets.xcassets */,
 				C5C074F829782A1B001B559F /* Preview Content */,
 			);
@@ -137,8 +157,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C5C074F529782A1A001B559F /* ContentView.swift in Sources */,
+				C5BBF5E7297836A800E926A2 /* StartView.swift in Sources */,
+				C5EFABB029A9E89E0006E174 /* AptitudeDetailView.swift in Sources */,
+				C5BF1AE229A9DC8200A0977E /* SearchAptitudeView.swift in Sources */,
+				C5BBF5E9297836B200E926A2 /* MainView.swift in Sources */,
+				C5BBF5E52978365400E926A2 /* AppView.swift in Sources */,
+				C5BBF5EB2978397D00E926A2 /* UserInformationView.swift in Sources */,
 				C5C074F329782A1A001B559F /* SJUCourseRecommendationServiceApp.swift in Sources */,
+				C5BBF5ED297839D100E926A2 /* ModifyInformationView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -264,18 +290,20 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"SJUCourseRecommendationService/Preview Content\"";
 				DEVELOPMENT_TEAM = FNC65X95VM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SJUCourseRecommendationService/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -283,6 +311,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.2023-1SejongCreativeSemester.SJUCourseRecommendationService";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -294,18 +323,20 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"SJUCourseRecommendationService/Preview Content\"";
 				DEVELOPMENT_TEAM = FNC65X95VM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SJUCourseRecommendationService/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -313,6 +344,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.2023-1SejongCreativeSemester.SJUCourseRecommendationService";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

@@ -1,0 +1,20 @@
+//
+//  UserInformationView.swift
+//  SJUCourseRecommendationService
+//
+//  Created by 김도형 on 2023/01/18.
+//
+
+import SwiftUI
+
+struct UserInformationView: View {
+    var body: some View {
+        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+    }
+}
+
+struct UserInformationView_Previews: PreviewProvider {
+    static var previews: some View {
+        UserInformationView()
+    }
+}
