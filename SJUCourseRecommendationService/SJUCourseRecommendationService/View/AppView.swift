@@ -9,11 +9,12 @@ import SwiftUI
 
 struct AppView: View {
     @State private var isFirstStart = true
+    
     var body: some View {
         if isFirstStart {
             StartView(isFirstStart: $isFirstStart)
         } else {
-            SearchAptitudeView()
+            HomeView()
         }
     }
 }

@@ -38,6 +38,7 @@ struct StartView: View {
                     RoundedRectangle(cornerRadius: 10)
                         .foregroundColor(Color("SejongColor"))
                 }
+                .shadow(radius: 5)
                 
                 Spacer()
                 
@@ -46,9 +47,11 @@ struct StartView: View {
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 200)
                     .padding()
+                    .shadow(radius: 10)
             }
             .frame(width: reader.size.width)
         }
+        .background(Color("BackgroundColor"))
     }
 }
 

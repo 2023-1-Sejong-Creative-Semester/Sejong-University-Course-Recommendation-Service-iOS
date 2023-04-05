@@ -10,30 +10,47 @@ import SwiftUI
 struct AptitudeDetailView: View {
     enum ContentType {
         case jobInfo
-        case lectures
+        case subject
     }
     
     @Namespace var matchedEffect
     
-    @State private var contentType: ContentType = .lectures
+    @Environment(\.colorScheme) var colorScheme
+    
+    @State private var contentType: ContentType = .jobInfo
+    @State private var scrollOffset: CGFloat = .zero
     
     var body: some View {
         GeometryReader { reader in
             ZStack(alignment: .top) {
                 GeometryReader { imageReader in
-                    let minY = imageReader.frame(in: .named("CONTENT")).minY
-                    
-                    Color(.secondaryLabel)
-                        .frame(height: reader.size.height / 3 + (minY > 0 ? minY : 0))
-                        .onChange(of: minY) { newValue in
-                            print(newValue)
+                    Color.secondary
+                        .opacity(0.5)
+                        .frame(height: reader.size.width - (scrollOffset < 0 ? scrollOffset : 0))
+                        .overlay(alignment: .top) {
+                            LinearGradient(colors: [.black.opacity(0.5),
+                                                    .black.opacity(0.4),
+                                                    .black.opacity(0.3),
+                                                    .black.opacity(0.2),
+                                                    .black.opacity(0.1),
+                                                    .black.opacity(0.08),
+                                                    .black.opacity(0.06),
+                                                    .black.opacity(0.04),
+                                                    .black.opacity(0.02),
+                                                    .black.opacity(0)
+                            ], startPoint: .top, endPoint: .bottom)
+                            .opacity(0.6)
+                        }
+                        .overlay {
+                            Color(.black)
+                                .opacity(scrollOffset / (reader.size.width * 2))
                         }
                 }
                 
                 ScrollView {
                     VStack(spacing: 0) {
                         Spacer()
-                            .frame(height: reader.size.height / 3)
+                            .frame(height: reader.size.width)
                         
                         title()
                         
@@ -44,13 +61,23 @@ struct AptitudeDetailView: View {
                         switch contentType {
                             case .jobInfo:
                                 jobInformation()
-                            case .lectures:
+                            case .subject:
                                 lectureList()
                         }
                     }
-                    .coordinateSpace(name: "CONTENT")
+                    .background {
+                        GeometryReader { reader in
+                            let offset = -reader.frame(in: .named("CONTENT")).minY
+                            Color.clear.preference(key: ScrollViewOffsetPreferenceKey.self, value: offset)
+                        }
+                    }
+                }
+                .coordinateSpace(name: "CONTENT")
+                .onPreferenceChange(ScrollViewOffsetPreferenceKey.self) { value in
+                    scrollOffset = value
                 }
             }
+            .ignoresSafeArea()
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
@@ -110,10 +137,11 @@ struct AptitudeDetailView: View {
             .font(.caption2)
             .padding(.vertical, 3)
             .padding(.horizontal, 10)
+            .foregroundColor(.secondary)
             .background {
                 RoundedRectangle(cornerRadius: 20)
-//                    .stroke(Color("SejongColor"))
                     .stroke(.secondary)
+                    .shadow(radius: 5)
             }
     }
     
@@ -141,22 +169,23 @@ struct AptitudeDetailView: View {
                     Rectangle()
                         .fill(Color("SejongColor"))
                         .matchedGeometryEffect(id: "SELECT", in: matchedEffect)
+                        .shadow(radius: 5)
                 } else {
                     Rectangle()
-                        .fill(Color("Background"))
+                        .fill(Color("BackgroundColor"))
                 }
             }
             
             Button {
                 withAnimation(.spring()) {
-                    contentType = .lectures
+                    contentType = .subject
                 }
             } label: {
                 HStack {
                     Spacer()
                     
                     Text("관련 수업")
-                        .foregroundColor(contentType == .lectures ? .white : .primary)
+                        .foregroundColor(contentType == .subject ? .white : .primary)
                     
                     Spacer()
                 }
@@ -164,19 +193,20 @@ struct AptitudeDetailView: View {
             .padding(.vertical)
             .tint(.primary)
             .background {
-                if contentType == .lectures {
+                if contentType == .subject {
                     Rectangle()
                         .fill(Color("SejongColor"))
                         .matchedGeometryEffect(id: "SELECT", in: matchedEffect)
+                        .shadow(radius: 5)
                 } else {
                     Rectangle()
-                        .fill(Color("Background"))
+                        .fill(Color("BackgroundColor"))
                 }
             }
         }
         .overlay(alignment: .bottom) {
             Rectangle()
-                .fill(.black)
+                .fill(.secondary.opacity(colorScheme == .dark ? 0.5 : 1))
                 .frame(height: 1)
         }
     }
@@ -258,7 +288,7 @@ struct AptitudeDetailView: View {
         .padding()
         .background(alignment: .bottom) {
             Rectangle()
-                .fill(.secondary)
+                .fill(.secondary.opacity(colorScheme == .dark ? 0.5 : 1))
                 .frame(height: 0.5)
         }
     }
