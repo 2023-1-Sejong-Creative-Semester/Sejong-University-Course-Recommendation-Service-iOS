@@ -18,18 +18,12 @@ struct SearchView: View {
         case language = "주언어"
         case track = "트랙"
         case semester = "학기"
+        case jobCategory = "직업"
     }
     
     enum Colleage: String {
         case softwareColleage = "소프트웨어융합대학"
         case electronicColleage = "전자정보통신공학대학"
-    }
-    
-    enum Language: String {
-        case CLanguage = "C"
-        case CPPLanguage = "C++"
-        case JavaLanguage = "자바"
-        case PythonLanguage = "파이썬"
     }
     
     enum Track: String {
@@ -39,32 +33,36 @@ struct SearchView: View {
     }
     
     enum Semester: String {
-        case first = "1-1"
-        case second = "1-2"
-        case third = "2-1"
-        case fourth = "2-2"
-        case fifth = "3-1"
-        case sixth = "3-2"
-        case seventh = "4-1"
-        case eighth = "4-2"
+        case first = "01-01"
+        case second = "01-02"
+        case third = "02-01"
+        case fourth = "02-02"
+        case fifth = "03-01"
+        case sixth = "03-02"
+        case seventh = "04-01"
+        case eighth = "04-02"
     }
     
-    @Namespace var heroEffect
+    enum JobCategory: String, Codable {
+        case fullStackDeveloper = "풀스택 개발"
+        case serverDeveloper = "서버 개발"
+        case webDeveloper = "웹 개발"
+    }
+    
+    @Environment(\.colorScheme) var colorScheme
+    
+    @State var searchType: SearchType
     
     @State private var error: APIError?
     @State private var showError: Bool = false
     @State private var showSelectColleage: Bool = true
-    @State private var jobList: [Job]?
+    @State private var jobList: JobResponse?
     @State private var subjectList: [Subject] = [Subject]()
-    @State private var searchType: SearchType
     @State private var currentCollege: Colleage = .softwareColleage
-    @State private var currentLanguage: Language = .CLanguage
+    @State private var currentLanguage: Set<Language> = [.CLanguage]
     @State private var currentTrack: Track = .electronicTrack
     @State private var currentSemester: Semester = .first
-    
-    init(searchType: SearchType) {
-        self.searchType = searchType
-    }
+    @State private var currentJobCategory: JobCategory = .webDeveloper
     
     var body: some View {
         NavigationStack {
@@ -81,7 +79,6 @@ struct SearchView: View {
         .overlay {
             if showSelectColleage {
                 selectColleage()
-                    .ignoresSafeArea()
             }
         }
         .alert("오류", isPresented: $showError) {
@@ -101,71 +98,142 @@ struct SearchView: View {
     @ViewBuilder
     func selectColleage() -> some View {
         VStack {
-            Spacer()
-                .frame(height: 200)
-            
             HStack {
                 Spacer()
                 
                 Text(searchType.rawValue)
                     .font(.largeTitle)
                     .fontWeight(.bold)
-                .foregroundColor(Color("SejongColor"))
+                    .foregroundColor(Color("SejongColor"))
                 
                 Spacer()
             }
             .padding(.bottom)
             
             Text("대학을 선택하세요")
-                .font(.title2)
+                .font(.title)
                 .fontWeight(.bold)
             
             Spacer()
+                .frame(height: 50)
             
-            
-            Button {
-                withAnimation(.easeInOut) {
-                    showSelectColleage = false
-                    currentCollege = .softwareColleage
-                    fetchJobList()
-                }
-            } label: {
-                Text(Colleage.softwareColleage.rawValue)
-                    .font(showSelectColleage ? .title2 : nil)
-                    .fontWeight(showSelectColleage ? .semibold : nil)
-                    .foregroundColor(Color("BackgroundColor"))
-                    .padding()
-                    .background {
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(Color("SejongColor"))
+            HStack {
+                VStack {
+                    Button {
+                        withAnimation(.easeInOut) {
+                            showSelectColleage = false
+                            currentCollege = .softwareColleage
+                            
+                            fetchJobList()
+                        }
+                    } label: {
+                        VStack {
+                            HStack {
+                                Image("SoftwareIcon")
+                                    .resizable()
+                                    .frame(width: 150, height: 150)
+                                
+                                Spacer()
+                            }
+                            
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    HStack(spacing: 0) {
+                                        Text("소")
+                                            .foregroundColor(Color("SejongColor"))
+                                        Text("프트웨어")
+                                    }
+                                    
+                                    HStack(spacing: 0) {
+                                        Text("융")
+                                            .foregroundColor(Color("SejongColor"))
+                                        Text("합")
+                                    }
+                                    
+                                    HStack(spacing: 0) {
+                                        Text("대")
+                                            .foregroundColor(Color("SejongColor"))
+                                        Text("학")
+                                    }
+                                }
+                                .font(.title)
+                                .fontWeight(.bold)
+                                .foregroundColor(.primary)
+                                
+                                Spacer()
+                            }
+                        }
                     }
-                    .matchedGeometryEffect(id: Colleage.softwareColleage.rawValue, in: heroEffect)
+                    .padding()
+                    
+                    Spacer()
+                        .frame(height: 200)
+                }
+                
+                Spacer()
+                
+                VStack {
+                    Spacer()
+                        .frame(height: 250)
+                    
+                    Button {
+                        withAnimation(.easeInOut) {
+                            showSelectColleage = false
+                            currentCollege = .electronicColleage
+                            
+                            fetchJobList()
+                        }
+                    } label: {
+                        VStack {
+                            HStack {
+                                Spacer()
+                                
+                                VStack(alignment: .leading) {
+                                    HStack(spacing: 0) {
+                                        Text("전")
+                                            .foregroundColor(Color("SejongColor"))
+                                        Text("자")
+                                    }
+                                    
+                                    HStack(spacing: 0) {
+                                        Text("정")
+                                            .foregroundColor(Color("SejongColor"))
+                                        Text("보")
+                                    }
+                                    
+                                    HStack(spacing: 0) {
+                                        Text("통")
+                                            .foregroundColor(Color("SejongColor"))
+                                        Text("신공학대학")
+                                    }
+                                }
+                                .font(.title)
+                                .fontWeight(.bold)
+                                .foregroundColor(.primary)
+                            }
+                            
+                            HStack {
+                                Image("ElectronicIcon")
+                                    .resizable()
+                                    .frame(width: 150, height: 150)
+                                
+                                Spacer()
+                            }
+                        }
+                    }
+                    .padding()
+                }
             }
-            .padding(.bottom)
-            
-            Button {
-                withAnimation(.easeInOut) {
-                    showSelectColleage = false
-                    currentCollege = .electronicColleage
-                    fetchJobList()
-                }
-            } label: {
-                Text(Colleage.electronicColleage.rawValue)
-                    .font(showSelectColleage ? .title2 : nil)
-                    .fontWeight(showSelectColleage ? .semibold : nil)
-                    .foregroundColor(Color("BackgroundColor"))
-                    .padding()
-                    .background {
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(Color("SejongColor"))
-                    }
-                    .matchedGeometryEffect(id: Colleage.electronicColleage.rawValue, in: heroEffect)
+            .background {
+                Rectangle()
+                    .fill(Color("SejongColor"))
+                    .frame(width: 1000, height: 20)
+                    .rotationEffect(Angle(degrees: -45))
             }
             
             Spacer()
-
         }
-        .background(Color("BackgroundColor"))
+        .background(colorScheme == .light ? .white : .black)
     }
     
     @ViewBuilder
@@ -174,7 +242,6 @@ struct SearchView: View {
             if !showSelectColleage {
                 Text(title)
                     .foregroundColor(isSelected ? Color("SejongColor") : .primary)
-                    .matchedGeometryEffect(id: title, in: heroEffect)
             }
         }
     }
@@ -184,15 +251,27 @@ struct SearchView: View {
         filterButton(title: college.rawValue, isSelected: college == currentCollege) {
             withAnimation(.easeInOut) {
                 currentCollege = college
+                
+                fetchJobList()
             }
         }
     }
     
     @ViewBuilder
     func filterLanguage(language: Language) -> some View {
-        filterButton(title: language.rawValue, isSelected: language == currentLanguage) {
+        filterButton(title: language.rawValue, isSelected: currentLanguage.contains(language)) {
             withAnimation(.easeInOut) {
-                currentLanguage = language
+                guard !currentLanguage.contains(language) || currentLanguage.count != 1 else {
+                    return
+                }
+                
+                guard let _ = currentLanguage.remove(language) else {
+                    currentLanguage.insert(language)
+                    fetchJobList()
+                    return
+                }
+                
+                fetchJobList()
             }
         }
     }
@@ -202,6 +281,8 @@ struct SearchView: View {
         filterButton(title: track.rawValue, isSelected: track == currentTrack) {
             withAnimation(.easeInOut) {
                 currentTrack = track
+                
+                fetchJobList()
             }
         }
     }
@@ -211,6 +292,19 @@ struct SearchView: View {
         filterButton(title: semester.rawValue, isSelected: semester == currentSemester) {
             withAnimation(.easeInOut) {
                 currentSemester = semester
+                
+                fetchJobList()
+            }
+        }
+    }
+    
+    @ViewBuilder
+    func filterJobCategory(category: JobCategory) -> some View {
+        filterButton(title: category.rawValue, isSelected: category == currentJobCategory) {
+            withAnimation(.easeInOut) {
+                currentJobCategory = category
+                
+                fetchJobList()
             }
         }
     }
@@ -221,20 +315,20 @@ struct SearchView: View {
             filterContentBar(filterContent: .colleage)
             
             switch currentCollege {
-                case .softwareColleage:
-                    filterContentBar(filterContent: .language)
-                        .background(alignment: .top) {
-                            Rectangle()
-                                .fill(.secondary)
-                                .frame(height: 0.25)
-                        }
-                case .electronicColleage:
-                    filterContentBar(filterContent: .track)
-                        .background(alignment: .top) {
-                            Rectangle()
-                                .fill(.secondary)
-                                .frame(height: 0.25)
-                        }
+            case .softwareColleage:
+                filterContentBar(filterContent: .language)
+                    .background(alignment: .top) {
+                        Rectangle()
+                            .fill(.secondary)
+                            .frame(height: 0.25)
+                    }
+            case .electronicColleage:
+                filterContentBar(filterContent: .track)
+                    .background(alignment: .top) {
+                        Rectangle()
+                            .fill(.secondary)
+                            .frame(height: 0.25)
+                    }
             }
             
             if searchType == .subject {
@@ -245,6 +339,13 @@ struct SearchView: View {
                             .frame(height: 0.5)
                     }
             }
+            
+            filterContentBar(filterContent: .jobCategory)
+                .background(alignment: .top) {
+                    Rectangle()
+                        .fill(.secondary)
+                        .frame(height: 0.25)
+                }
         }
         .background(Color("ShapeBackgroundColor"))
     }
@@ -259,26 +360,30 @@ struct SearchView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 20) {
                     switch filterContent {
-                        case .colleage:
-                            filterCollege(college: currentCollege)
-                        case .language:
-                            filterLanguage(language: .CLanguage)
-                            filterLanguage(language: .CPPLanguage)
-                            filterLanguage(language: .JavaLanguage)
-                            filterLanguage(language: .PythonLanguage)
-                        case .track:
-                            filterTrack(track: .electronicTrack)
-                            filterTrack(track: .informationTrack)
-                            filterTrack(track: .communicationTrack)
-                        case .semester:
-                            filterSemester(semester: .first)
-                            filterSemester(semester: .second)
-                            filterSemester(semester: .third)
-                            filterSemester(semester: .fourth)
-                            filterSemester(semester: .fifth)
-                            filterSemester(semester: .sixth)
-                            filterSemester(semester: .seventh)
-                            filterSemester(semester: .eighth)
+                    case .colleage:
+                        filterCollege(college: currentCollege)
+                    case .language:
+                        filterLanguage(language: .CLanguage)
+                        filterLanguage(language: .CPPLanguage)
+                        filterLanguage(language: .JavaLanguage)
+                        filterLanguage(language: .PythonLanguage)
+                    case .track:
+                        filterTrack(track: .electronicTrack)
+                        filterTrack(track: .informationTrack)
+                        filterTrack(track: .communicationTrack)
+                    case .semester:
+                        filterSemester(semester: .first)
+                        filterSemester(semester: .second)
+                        filterSemester(semester: .third)
+                        filterSemester(semester: .fourth)
+                        filterSemester(semester: .fifth)
+                        filterSemester(semester: .sixth)
+                        filterSemester(semester: .seventh)
+                        filterSemester(semester: .eighth)
+                    case .jobCategory:
+                        filterJobCategory(category: .fullStackDeveloper)
+                        filterJobCategory(category: .serverDeveloper)
+                        filterJobCategory(category: .webDeveloper)
                     }
                 }
                 .font(.subheadline)
@@ -293,13 +398,13 @@ struct SearchView: View {
         if let list = jobList {
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    ForEach(0..<5) { Int in
+                    ForEach(list.results) { job in
                         NavigationLink {
-                            AptitudeDetailView()
+                            AptitudeDetailView(jobRequest: IntroduceJobRequest(job: job.job, category: job.category))
                                 .toolbarBackground(Color("BackgroundColor").opacity(0.1), for: .navigationBar)
                                 .scrollContentBackground(.hidden)
                         } label: {
-                            subAptitude()
+                            subAptitude(job: job)
                         }
                         .tint(.primary)
                     }
@@ -317,7 +422,7 @@ struct SearchView: View {
     }
     
     @ViewBuilder
-    func subAptitude() -> some View {
+    func subAptitude(job: Job) -> some View {
         HStack {
             Color(.secondaryLabel)
                 .frame(width: 100, height: 100)
@@ -325,14 +430,22 @@ struct SearchView: View {
                 .shadow(radius: 5)
                 .padding(.trailing)
             
-            VStack(alignment: .leading, spacing: 10) {
-                Text("iOS 개발자")
+            VStack(alignment: .leading, spacing: 5) {
+                Text(job.job)
                     .font(.headline)
                 
-                Text("간단한 설명 간단한 설명 간단한 설명 간단한 설명 간단한 설명 간단한 설명 간단한 설명 간단한 설명 ")
+                Text(job.instruction)
                     .font(.caption)
                 
-                Spacer()
+                ScrollView(.horizontal) {
+                    HStack {
+                        ForEach(job.stack, id: \.hashValue) { stack in
+                            titleTag(tag: stack)
+                        }
+                    }
+                    .padding(.horizontal, 5)
+                    .padding(.vertical)
+                }
             }
             .padding(.vertical, 5)
         }
@@ -341,34 +454,50 @@ struct SearchView: View {
             RoundedRectangle(cornerRadius: 10)
                 .fill(Color("ShapeBackgroundColor"))
         }
-        .padding(.horizontal, 5)
+        .padding(.horizontal)
         .padding(.top)
+    }
+    
+    @ViewBuilder
+    func titleTag(tag: String) -> some View {
+        Text(tag)
+            .font(.caption2)
+            .padding(.vertical, 3)
+            .padding(.horizontal, 10)
+            .foregroundColor(.secondary)
+            .background {
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(.secondary)
+            }
     }
     
     func fetchJobList() {
         Task {
             do {
-                let (data, response) = try await URLSession.shared.data(from: APIURL.introduceJob.url)
+                let body = JobRequest(colleage: currentCollege.rawValue, stack: currentLanguage, category: currentJobCategory.rawValue)
+                
+                var request = URLRequest(url: APIURL.classifyJob.url)
+                request.httpMethod = "POST"
+                request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+                request.httpBody = try JSONEncoder().encode(body)
+                
+                let (data, response) = try await URLSession.shared.data(for: request)
                 
                 guard let httpResponse = response as? HTTPURLResponse else {
                     throw APIError.invalidResponse
                 }
                 
                 guard httpResponse.statusCode == 200 else {
-                    if httpResponse.statusCode == 400 {
-                        throw APIError.serverError
-                    } else if httpResponse.statusCode == 404 {
-                        throw APIError.invalidRequest
-                    } else {
-                        throw APIError.unknown(statusCode: httpResponse.statusCode)
-                    }
+                    throw APIError.responseHandling(statusCode: httpResponse.statusCode)
                 }
                 
-                self.jobList = try JSONDecoder().decode([Job].self, from: data)
-                print("success")
+                self.jobList = try JSONDecoder().decode(JobResponse.self, from: data)
+                print("success \(#function)")
             } catch {
                 showError = true
-                self.error = error as? APIError
+                self.error = APIError.convert(error: error)
+                print("fail \(#function)")
+                print(error)
             }
         }
     }

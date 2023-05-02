@@ -8,10 +8,10 @@
 import Foundation
 
 struct LanguageData: Codable {
-    let data: [Language]
+    let data: [IntroduceLanguage]
 }
 
-struct Language: Codable {
+struct IntroduceLanguage: Codable {
     let id: Int
     let name: String
     let intro: String

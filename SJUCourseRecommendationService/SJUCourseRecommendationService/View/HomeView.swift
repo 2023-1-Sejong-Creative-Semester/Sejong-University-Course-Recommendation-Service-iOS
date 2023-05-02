@@ -11,6 +11,7 @@ struct HomeView: View {
     @Environment(\.colorScheme) var colorScheme
     
     @State private var trend: Trend?
+    @State private var comparative: ActivityResponse?
     @State private var error: APIError?
     @State private var showError: Bool = false
     
@@ -28,7 +29,7 @@ struct HomeView: View {
             ScrollView {
                 searchButton()
                 
-                universityActivity(contents: ["2023학년도 후기 1차 대학원 신/편입생 모집", "세종대학교 정규직원 채용", "교육대학원 행정 조교 모집", "세종대학교 대학혁신지원사업추진단(학생생활상담소) 계약직원 채용공고"])
+                universityActivity(title: "비교과 활동", activity: comparative?.results)
                 
                 recruitTrendList()
             }
@@ -37,6 +38,7 @@ struct HomeView: View {
             .task {
                 withAnimation(.easeInOut) {
                     fetchTrend()
+                    fetchComparative()
                 }
             }
         }
@@ -46,6 +48,7 @@ struct HomeView: View {
                 withAnimation(.easeInOut) {
                     error = nil
                     fetchTrend()
+                    fetchComparative()
                 }
             } label: {
                 Text("다시시도")
@@ -148,14 +151,14 @@ struct HomeView: View {
     @ViewBuilder
     func recruitTrendList() -> some View {
         LazyVGrid(columns: columns) {
-            trendList(title: "언어", contents: trend?.recruit.language)
+            trendList(title: "언어", contents: trend?.recruit.stack)
                 .padding()
                 .background {
                     listBackgound()
                 }
                 .padding()
             
-            trendList(title: "직군", contents: trend?.recruit.tech)
+            trendList(title: "직군", contents: trend?.recruit.job)
                 .padding()
                 .background {
                     listBackgound()
@@ -165,20 +168,41 @@ struct HomeView: View {
     }
     
     @ViewBuilder
-    func universityActivity(contents: [String]) -> some View {
+    func universityActivity(title: String, activity: [Activity]?) -> some View {
         VStack {
-            titleStyle(title: "학교 활동")
+            titleStyle(title: title)
             
-            VStack(spacing: 20) {
-                ForEach(contents, id: \.hashValue) { content in
-                    HStack {
-                        Text(content)
-                            .fontWeight(.semibold)
-                            .lineLimit(1)
-                        
-                        Spacer()
+            if let contents = activity {
+                VStack(spacing: 20) {
+                    ForEach(contents) { content in
+                        HStack {
+//                            Button {
+//                                if let url = URL(string: content.url) {
+//                                    UIApplication.shared.open(url)
+//                                }
+//                            } label: {
+//                                Text(content.title)
+//                                    .fontWeight(.semibold)
+//                                    .lineLimit(1)
+//                            }
+                            
+                            NavigationLink {
+                                WebBrowserView(url: content.url)
+                                    .navigationBarTitleDisplayMode(.inline)
+                            } label: {
+                                Text(content.title)
+                                    .fontWeight(.semibold)
+                                    .lineLimit(1)
+                            }
+                            
+                            Spacer()
+                        }
                     }
                 }
+            } else {
+                ProgressView()
+                    .progressViewStyle(.circular)
+                    .controlSize(.regular)
             }
         }
         .padding()
@@ -204,18 +228,40 @@ struct HomeView: View {
                 }
                 
                 guard httpResponse.statusCode == 200 else {
-                    if httpResponse.statusCode == 400 {
-                        throw APIError.serverError
-                    } else if httpResponse.statusCode == 404 {
-                        throw APIError.invalidRequest
-                    } else {
-                        throw APIError.unknown(statusCode: httpResponse.statusCode)
-                    }
+                    throw APIError.responseHandling(statusCode: httpResponse.statusCode)
                 }
+                
                 self.trend = try JSONDecoder().decode(Trend.self, from: data)
-                print("success")
+                print("success \(#function)")
             } catch {
+                showError = true
                 self.error = error as? APIError
+                print("fail \(#function)")
+                print(error)
+            }
+        }
+    }
+    
+    func fetchComparative() {
+        Task {
+            do {
+                let (data, response) = try await URLSession.shared.data(from: APIURL.comparative.url)
+                
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    throw APIError.invalidResponse
+                }
+                
+                guard httpResponse.statusCode == 200 else {
+                    throw APIError.responseHandling(statusCode: httpResponse.statusCode)
+                }
+                
+                self.comparative = try JSONDecoder().decode(ActivityResponse.self, from: data)
+                print("success \(#function)")
+            } catch {
+                showError = true
+                self.error = error as? APIError
+                print("fail \(#function)")
+                print(error)
             }
         }
     }
@@ -223,6 +269,6 @@ struct HomeView: View {
 
 struct HomeView_Previews: PreviewProvider {
     static var previews: some View {
-        HomeView(trend: Trend(recruit: LanguageAndTech(language: ["자바", "파이썬", "C++", "C#", "Dart"], tech: ["백엔드", "프론트엔드", "게임", "인공지능", "데이터분석"]), search: LanguageAndTech(language: ["자바", "파이썬", "C++", "C#", "Dart"], tech: ["백엔드", "프론트엔드", "게임", "인공지능", "데이터분석"])))
+        HomeView(trend: Trend(recruit: LanguageAndTech(stack: ["자바", "파이썬", "C++", "C#", "Dart"], job: ["백엔드", "프론트엔드", "게임", "인공지능", "데이터분석"]), search: LanguageAndTech(stack: ["자바", "파이썬", "C++", "C#", "Dart"], job: ["백엔드", "프론트엔드", "게임", "인공지능", "데이터분석"])))
     }
 }

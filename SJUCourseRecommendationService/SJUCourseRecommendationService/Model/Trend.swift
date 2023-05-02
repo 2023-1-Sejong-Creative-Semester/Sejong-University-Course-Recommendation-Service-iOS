@@ -13,6 +13,6 @@ struct Trend: Codable {
 }
 
 struct LanguageAndTech: Codable {
-    let language: [String]
-    let tech: [String]
+    let stack: [String]
+    let job: [String]
 }
