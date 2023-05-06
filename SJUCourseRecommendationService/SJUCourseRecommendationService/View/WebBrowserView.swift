@@ -6,85 +6,57 @@
 //
 
 import SwiftUI
-import Combine
 import WebKit
+
+class WKWebViewModel: WKWebView, WKNavigationDelegate, ObservableObject {
+    @Published var publishedCanGoBack = false
+    @Published var publishedCanForward = false
+    @Published var publishedIsLoading = false
+    @Published var publishedProgress = 0.0
+    
+    func initViewModel() {
+        self.navigationDelegate = self
+        self.addObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress), options: .new, context: nil)
+    }
+    
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        publishedCanGoBack = webView.canGoBack
+        publishedCanForward = webView.canGoForward
+        publishedIsLoading = webView.isLoading
+    }
+    
+    func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
+        publishedIsLoading = webView.isLoading
+    }
+    
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        publishedProgress = self.estimatedProgress
+    }
+}
 
 struct WebView: UIViewRepresentable {
     let url: URL
-    let webView: WKWebView
-    
-    func makeUIView(context: Context) -> UIView {
-        let containerView = UIView()
-        let progressView = UIProgressView(progressViewStyle: .default)
-        
-        webView.translatesAutoresizingMaskIntoConstraints = false
-        containerView.addSubview(webView)
-        containerView.addSubview(progressView)
-        
-        NSLayoutConstraint.activate([
-            webView.topAnchor.constraint(equalTo: containerView.topAnchor),
-            webView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            webView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            webView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
-            
-            progressView.topAnchor.constraint(equalTo: containerView.topAnchor),
-            progressView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            progressView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            progressView.heightAnchor.constraint(equalToConstant: 2),
-        ])
-        
-        let request = URLRequest(url: url)
-        webView.load(request)
-        
-        webView.addObserver(context.coordinator, forKeyPath: #keyPath(WKWebView.estimatedProgress), options: .new, context: nil)
-        
-        return containerView
+    let webView: WKWebViewModel
+
+    init(url: URL, webView: WKWebViewModel) {
+        self.url = url
+        self.webView = webView
     }
-    
-    func updateUIView(_ uiView: UIView, context: Context) {
-        guard let webView = uiView.subviews.first(where: { $0 is WKWebView }) as? WKWebView else { return }
-        let request = URLRequest(url: url)
-        webView.load(request)
+
+    func makeUIView(context: Context) -> WKWebView {
+        webView.load(URLRequest(url: url))
+        return webView as WKWebView
     }
-    
-    func makeCoordinator() -> Coordinator {
-        return Coordinator()
-    }
-    
-    class Coordinator: NSObject {
-        let progressView = UIProgressView(progressViewStyle: .default)
-        
-        override init() {
-            super.init()
-            
-            progressView.progressTintColor = UIColor(Color("SejongColor"))
-            progressView.trackTintColor = .clear
-        }
-        
-        deinit {
-            progressView.removeFromSuperview()
-        }
-        
-        override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-            if keyPath == #keyPath(WKWebView.estimatedProgress), let progress = change?[.newKey] as? Double {
-                didUpdateProgress(progress)
-            }
-        }
-        
-        func didUpdateProgress(_ progress: Double) {
-            progressView.setProgress(Float(progress), animated: true)
-        }
+
+    func updateUIView(_ uiView: WKWebView, context: Context) {
+        uiView.load(URLRequest(url: url))
     }
 }
 
 struct WebBrowserView: View {
-    let url: String
+    @ObservedObject private var wKWebViewModel: WKWebViewModel = WKWebViewModel()
     
-    @State private var canGoBackSubscriptions = PassthroughSubject<Bool, Never>()
-    @State private var canGoForwardSubscriptions = PassthroughSubject<Bool, Never>()
-    @State private var webView: WKWebView = WKWebView()
-    @State private var canGoBack = false
-    @State private var canGoForward = false
+    let url: String
     
     init(url: String) {
         self.url = url
@@ -92,8 +64,12 @@ struct WebBrowserView: View {
     
     var body: some View {
         VStack {
+            if wKWebViewModel.publishedIsLoading {
+                ProgressView(value: wKWebViewModel.publishedProgress)
+            }
+            
             if let url = URL(string: url) {
-                WebView(url: url, webView: webView)
+                WebView(url: url, webView: wKWebViewModel)
             } else {
                 ProgressView()
                     .progressViewStyle(.circular)
@@ -114,56 +90,60 @@ struct WebBrowserView: View {
                 reloadButton()
                 
                 Spacer()
+                
+                shareButton()
+                
+                Spacer()
             }
             .padding()
-            .onAppear() {
-                let _ = canGoBackSubscriptions.sink(receiveValue: { newValue in
-                    DispatchQueue.main.async {
-                        canGoBack = newValue
-                    }
-                })
-                
-                let _ = canGoForwardSubscriptions.sink(receiveValue: { newValue in
-                    canGoForward = newValue
-                })
-            }
         }
-        .onTapGesture {
-            canGoBackSubscriptions.send(self.webView.canGoBack)
-            print(#function)
+        .tint(Color("SejongColor"))
+        .background(Color("BackgroundColor"))
+        .onAppear() {
+            wKWebViewModel.initViewModel()
         }
     }
     
     @ViewBuilder
     func backButton() -> some View {
         Button{
-            if canGoBack {
-                self.webView.goBack()
+            if wKWebViewModel.publishedCanGoBack {
+                self.wKWebViewModel.goBack()
             }
         } label: {
             Image(systemName: "chevron.backward")
         }
-        .disabled(!canGoBack)
+        .disabled(!wKWebViewModel.publishedCanGoBack)
     }
     
     @ViewBuilder
     func forwardButton() -> some View {
         Button {
-            if canGoForward {
-                self.webView.goForward()
+            if wKWebViewModel.publishedCanForward {
+                self.wKWebViewModel.goForward()
             }
         } label: {
             Image(systemName: "chevron.forward")
         }
-        .disabled(!self.webView.canGoForward)
+        .disabled(!wKWebViewModel.publishedCanForward)
     }
     
     @ViewBuilder
     func reloadButton() -> some View {
         Button {
-            self.webView.reload()
+            self.wKWebViewModel.reload()
         } label: {
             Image(systemName: "arrow.clockwise")
+        }
+    }
+    
+    @ViewBuilder
+    func shareButton() -> some View {
+        Button{
+            let activityViewController = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+            UIApplication.shared.windows.first?.rootViewController?.present(activityViewController, animated: true, completion: nil)
+        } label: {
+            Image(systemName: "square.and.arrow.up")
         }
     }
 }

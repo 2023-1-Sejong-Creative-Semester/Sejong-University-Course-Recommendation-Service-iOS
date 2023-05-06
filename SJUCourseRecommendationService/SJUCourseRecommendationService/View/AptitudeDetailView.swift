@@ -19,6 +19,7 @@ struct AptitudeDetailView: View {
     
     @State var jobRequest: IntroduceJobRequest
     @State var introduceJob: IntroduceJobResponse?
+    @State var roadmapList: Roadmaps?
     
     @State private var contentType: ContentType = .jobInfo
     @State private var scrollOffset: CGFloat = .zero
@@ -45,27 +46,9 @@ struct AptitudeDetailView: View {
                 Text(error?.errorMessage ?? "")
             }
             .ignoresSafeArea()
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        
-                    } label: {
-                        Image(systemName: "heart")
-                    }
-                    .tint(.pink)
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        
-                    } label: {
-                        Image(systemName: "star")
-                    }
-                    .tint(.yellow)
-                }
-            }
             .task {
                 fetchIntroduceJob()
+                fetchRoadmapDetail()
             }
         }
     }
@@ -261,9 +244,11 @@ struct AptitudeDetailView: View {
                 
                 Text("사진 및 설명들\n")
                 
-                Text("사진 및 설명들\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+                Text("사진 및 설명들\n\n\n\n\n\n\n")
                 
-                Spacer()
+                if let list = roadmapList {
+                    roadmapListArea(list: list)
+                }
             } header: {
                 contentSelection()
                     .background(Color("BackgroundColor"))
@@ -329,6 +314,73 @@ struct AptitudeDetailView: View {
         }
     }
     
+    @ViewBuilder
+    func subRoadmap(roadmap: Roadmap) -> some View {
+        NavigationLink {
+            WebBrowserView(url: roadmap.link)
+                .navigationBarTitleDisplayMode(.inline)
+        } label: {
+            VStack {
+                AsyncImage(url: URL(string: roadmap.logo)) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                } placeholder: {
+                    ZStack {
+                        Color.gray.opacity(0.2)
+                        
+                        ProgressView()
+                            .tint(Color("SejongColor"))
+                    }
+                }
+                .frame(width: 100, height: 100)
+                
+                Text(roadmap.name)
+                    .fontWeight(.bold)
+            }
+        }
+        .tint(.primary)
+    }
+    
+    @ViewBuilder
+    func roadmapListArea(list: Roadmaps) -> some View {
+        VStack {
+            NavigationLink {
+                WebBrowserView(url: list.homepage)
+                    .navigationBarTitleDisplayMode(.inline)
+                    .tint(Color("SejongColor"))
+            } label: {
+                HStack {
+                    Text("로드맵")
+                        .fontWeight(.semibold)
+                        .lineLimit(1)
+                    
+                    Spacer()
+                }
+            }
+            .padding()
+            .tint(.primary)
+            
+            Rectangle()
+                .fill(.gray.opacity(0.2))
+                .background(Color("BackgroundColor"))
+            
+            ScrollView(.horizontal) {
+                LazyHStack {
+                    ForEach(list.roadmap) { roadmap in
+                        subRoadmap(roadmap: roadmap)
+                    }
+                }
+            }
+            .padding()
+            
+            Rectangle()
+                .fill(.gray.opacity(0.2))
+                .background(Color("BackgroundColor"))
+        }
+        .padding(.bottom, 50)
+    }
+    
     func fetchIntroduceJob() {
         Task {
             do {
@@ -348,6 +400,32 @@ struct AptitudeDetailView: View {
                 }
                 
                 self.introduceJob = try JSONDecoder().decode(IntroduceJobResponse.self, from: data)
+                print("success \(#function)")
+            } catch {
+                showError = true
+                self.error = APIError.convert(error: error)
+                print("fail \(#function)")
+                print(error)
+            }
+        }
+    }
+    
+    func fetchRoadmapDetail() {
+        Task {
+            do {
+                let request = URLRequest(url: APIURL.roadmapDetail.url)
+                
+                let (data, response) = try await URLSession.shared.data(for: request)
+                
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    throw APIError.invalidResponse
+                }
+                
+                guard httpResponse.statusCode == 200 else {
+                    throw APIError.responseHandling(statusCode: httpResponse.statusCode)
+                }
+                
+                self.roadmapList = try JSONDecoder().decode(Roadmaps.self, from: data)
                 print("success \(#function)")
             } catch {
                 showError = true

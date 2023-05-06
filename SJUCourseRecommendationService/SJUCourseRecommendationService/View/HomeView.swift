@@ -11,12 +11,18 @@ struct HomeView: View {
     @Environment(\.colorScheme) var colorScheme
     
     @State private var trend: Trend?
-    @State private var comparative: ActivityResponse?
+    @State private var comparative: ActivityComparativeResponse?
+    @State private var curriculum: ActivityCurriculumResponse?
+    @State var roadmapList: Roadmaps?
     @State private var error: APIError?
     @State private var showError: Bool = false
     
     private let columns = [
         GridItem(.adaptive(minimum: 350, maximum: .infinity), spacing: nil, alignment: .top)
+    ]
+    
+    private let roadmapColumns = [
+        GridItem(.adaptive(minimum: 150, maximum: .infinity), spacing: nil, alignment: .top)
     ]
     
     init(trend: Trend? = nil, error: APIError? = nil) {
@@ -29,9 +35,13 @@ struct HomeView: View {
             ScrollView {
                 searchButton()
                 
-                universityActivity(title: "비교과 활동", activity: comparative?.results)
+                activityComparativeList(title: "비교과 활동", activity: comparative?.results)
+                
+                activityCurriculumList(title: "취업 지원 활동", activity: curriculum?.results)
                 
                 recruitTrendList()
+                
+                roadmapGrid()
             }
             .navigationTitle("넌뭐듣냐?")
             .background(Color("BackgroundColor"))
@@ -39,6 +49,8 @@ struct HomeView: View {
                 withAnimation(.easeInOut) {
                     fetchTrend()
                     fetchComparative()
+                    fetchCurriculum()
+                    fetchRoadmapMain()
                 }
             }
         }
@@ -70,7 +82,7 @@ struct HomeView: View {
                     Text("적성 검색")
                         .font(.title)
                         .fontWeight(.bold)
-                        .foregroundColor(colorScheme == .light ? .white : .black)
+                        .foregroundColor(.white)
                         .padding()
                     
                     Spacer()
@@ -92,7 +104,7 @@ struct HomeView: View {
                     Text("수업 검색")
                         .font(.title)
                         .fontWeight(.bold)
-                        .foregroundColor(colorScheme == .light ? .white : .black)
+                        .foregroundColor(.white)
                         .padding()
                     
                     Spacer()
@@ -168,29 +180,20 @@ struct HomeView: View {
     }
     
     @ViewBuilder
-    func universityActivity(title: String, activity: [Activity]?) -> some View {
+    func activityComparativeList(title: String, activity: [ActivityComparative]?) -> some View {
         VStack {
             titleStyle(title: title)
             
             if let contents = activity {
-                VStack(spacing: 20) {
+                VStack(alignment: .leading, spacing: 20) {
                     ForEach(contents) { content in
                         HStack {
-//                            Button {
-//                                if let url = URL(string: content.url) {
-//                                    UIApplication.shared.open(url)
-//                                }
-//                            } label: {
-//                                Text(content.title)
-//                                    .fontWeight(.semibold)
-//                                    .lineLimit(1)
-//                            }
-                            
                             NavigationLink {
                                 WebBrowserView(url: content.url)
                                     .navigationBarTitleDisplayMode(.inline)
                             } label: {
                                 Text(content.title)
+                                    .foregroundColor(.primary)
                                     .fontWeight(.semibold)
                                     .lineLimit(1)
                             }
@@ -210,6 +213,140 @@ struct HomeView: View {
             listBackgound()
         }
         .padding(.horizontal)
+    }
+    
+    @ViewBuilder
+    func activityCurriculumList(title: String, activity: ActivityCurriculum?) -> some View {
+        VStack {
+            titleStyle(title: title)
+            
+            if let contents = activity {
+                VStack(alignment: .leading, spacing: 20) {
+                    ForEach(contents.career) { content in
+                        NavigationLink {
+                            WebBrowserView(url: content.url)
+                                .navigationBarTitleDisplayMode(.inline)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 0) {
+                                Text(content.title)
+                                    .foregroundColor(.primary)
+                                    .fontWeight(.semibold)
+                                    .truncationMode(.tail)
+                                    .lineLimit(1)
+                                
+                                Text("기한 : \(content.deadline)")
+                                    .foregroundColor(.secondary)
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .padding([.top, .leading], 5)
+                            }
+                        }
+                    }
+                    
+                    ForEach(contents.employment) { content in
+                        NavigationLink {
+                            WebBrowserView(url: content.url)
+                                .navigationBarTitleDisplayMode(.inline)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 0) {
+                                Text(content.title)
+                                    .foregroundColor(.primary)
+                                    .fontWeight(.semibold)
+                                    .truncationMode(.tail)
+                                    .lineLimit(1)
+                                
+                                Text("기한 : \(content.deadline)")
+                                    .foregroundColor(.secondary)
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .padding([.top, .leading], 5)
+                            }
+                        }
+                    }
+                    
+                    ForEach(contents.regional) { content in
+                        NavigationLink {
+                            WebBrowserView(url: content.url)
+                                .navigationBarTitleDisplayMode(.inline)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 0) {
+                                Text(content.title)
+                                    .foregroundColor(.primary)
+                                    .fontWeight(.semibold)
+                                    .truncationMode(.tail)
+                                    .lineLimit(1)
+                                
+                                Text("기한 : \(content.deadline)")
+                                    .foregroundColor(.secondary)
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .padding([.top, .leading], 5)
+                            }
+                        }
+                    }
+                }
+            } else {
+                ProgressView()
+                    .progressViewStyle(.circular)
+                    .controlSize(.regular)
+            }
+        }
+        .padding()
+        .background {
+            listBackgound()
+        }
+        .padding([.horizontal, .top])
+    }
+    
+    @ViewBuilder
+    func roadmapGrid() -> some View {
+        VStack {
+            titleStyle(title: "로드맵")
+            
+            if let roadmaps = roadmapList {
+                LazyVGrid(columns: roadmapColumns) {
+                    ForEach(roadmaps.roadmap) { roadmap in
+                        subRoadmap(roadmap: roadmap)
+                    }
+                }
+            } else {
+                ProgressView()
+                    .progressViewStyle(.circular)
+                    .controlSize(.regular)
+            }
+        }
+        .padding()
+        .background {
+            listBackgound()
+        }
+        .padding([.horizontal, .top])
+    }
+    
+    @ViewBuilder
+    func subRoadmap(roadmap: Roadmap) -> some View {
+        HStack {
+            AsyncImage(url: URL(string: roadmap.logo)) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+            } placeholder: {
+                ZStack {
+                    Color.gray.opacity(0.2)
+                    
+                    ProgressView()
+                        .tint(Color("SejongColor"))
+                }
+            }
+            .frame(width: 100, height: 100)
+            
+            VStack {
+                Text(roadmap.name)
+                    .font(.footnote)
+                    .fontWeight(.bold)
+                
+                Spacer()
+            }
+        }
     }
     
     @ViewBuilder
@@ -255,11 +392,61 @@ struct HomeView: View {
                     throw APIError.responseHandling(statusCode: httpResponse.statusCode)
                 }
                 
-                self.comparative = try JSONDecoder().decode(ActivityResponse.self, from: data)
+                self.comparative = try JSONDecoder().decode(ActivityComparativeResponse.self, from: data)
                 print("success \(#function)")
             } catch {
                 showError = true
                 self.error = error as? APIError
+                print("fail \(#function)")
+                print(error)
+            }
+        }
+    }
+    
+    func fetchCurriculum() {
+        Task {
+            do {
+                let (data, response) = try await URLSession.shared.data(from: APIURL.curriculum.url)
+                
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    throw APIError.invalidResponse
+                }
+                
+                guard httpResponse.statusCode == 200 else {
+                    throw APIError.responseHandling(statusCode: httpResponse.statusCode)
+                }
+                
+                self.curriculum = try JSONDecoder().decode(ActivityCurriculumResponse.self, from: data)
+                print("success \(#function)")
+            } catch {
+                showError = true
+                self.error = error as? APIError
+                print("fail \(#function)")
+                print(error)
+            }
+        }
+    }
+    
+    func fetchRoadmapMain() {
+        Task {
+            do {
+                let request = URLRequest(url: APIURL.roadmapMain.url)
+                
+                let (data, response) = try await URLSession.shared.data(for: request)
+                
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    throw APIError.invalidResponse
+                }
+                
+                guard httpResponse.statusCode == 200 else {
+                    throw APIError.responseHandling(statusCode: httpResponse.statusCode)
+                }
+                
+                self.roadmapList = try JSONDecoder().decode(Roadmaps.self, from: data)
+                print("success \(#function)")
+            } catch {
+                showError = true
+                self.error = APIError.convert(error: error)
                 print("fail \(#function)")
                 print(error)
             }

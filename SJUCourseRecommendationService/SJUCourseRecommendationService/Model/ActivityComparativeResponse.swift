@@ -7,11 +7,11 @@
 
 import Foundation
 
-struct ActivityResponse: Codable {
-    let results: [Activity]
+struct ActivityComparativeResponse: Codable {
+    let results: [ActivityComparative]
 }
 
-struct Activity: Codable, Identifiable {
+struct ActivityComparative: Codable, Identifiable {
     let id: Int
     let colleage, title: String
     let url: String

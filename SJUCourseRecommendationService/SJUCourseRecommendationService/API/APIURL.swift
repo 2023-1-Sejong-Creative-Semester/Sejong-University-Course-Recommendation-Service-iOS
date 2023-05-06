@@ -13,8 +13,11 @@ enum APIURL {
     case introduceLanguage
     case trend
     case comparative
+    case curriculum
     case classifyJob
     case classifyJobIntroduce
+    case roadmapMain
+    case roadmapDetail
     
     var url: URL {
         var urlComponents = URLComponents(string: "http://34.168.80.42:3001")!
@@ -38,11 +41,20 @@ enum APIURL {
         case .comparative:
             urlComponents.path = "/activity/comparative"
             return urlComponents.url!
+        case .curriculum:
+            urlComponents.path = "/activity/curriculum"
+            return urlComponents.url!
         case .classifyJob:
             urlComponents.path = "/classify/job"
             return urlComponents.url!
         case .classifyJobIntroduce:
             urlComponents.path = "/classify/job/intro"
+            return urlComponents.url!
+        case .roadmapMain:
+            urlComponents.path = "/roadmap/main"
+            return urlComponents.url!
+        case .roadmapDetail:
+            urlComponents.path = "/roadmap/detail"
             return urlComponents.url!
         }
     }

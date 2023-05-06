@@ -13,8 +13,10 @@ struct AppView: View {
     var body: some View {
         if isFirstStart {
             StartView(isFirstStart: $isFirstStart)
+                .tint(Color("SejongColor"))
         } else {
             HomeView()
+                .tint(Color("SejongColor"))
         }
     }
 }

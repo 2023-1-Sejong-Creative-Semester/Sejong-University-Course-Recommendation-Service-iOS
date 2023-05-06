@@ -233,7 +233,7 @@ struct SearchView: View {
             
             Spacer()
         }
-        .background(colorScheme == .light ? .white : .black)
+        .background(Color("BackgroundColor"))
     }
     
     @ViewBuilder
