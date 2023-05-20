@@ -11,6 +11,7 @@ enum APIURL {
     case introduceJob
     case introduceDepartment
     case introduceLanguage
+    case introduceStack
     case trend
     case comparative
     case curriculum
@@ -18,6 +19,7 @@ enum APIURL {
     case classifyJobIntroduce
     case roadmapMain
     case roadmapDetail
+    case roadmapJob
     
     func url(id: Int? = nil) -> URL {
         var urlComponents = URLComponents(string: "http://34.168.80.42:3001")!
@@ -34,6 +36,9 @@ enum APIURL {
         case .introduceLanguage:
             urlComponents.path = "/introduce"
             urlComponents.queryItems = [URLQueryItem(name: "type", value: "language")]
+            return urlComponents.url!
+        case .introduceStack:
+            urlComponents.path = "/introduce/stackInfo"
             return urlComponents.url!
         case .trend:
             urlComponents.path = "/trend"
@@ -57,6 +62,10 @@ enum APIURL {
             urlComponents.path = "/roadmap/detail"
             urlComponents.queryItems = [URLQueryItem(name: "index", value: "\(id ?? 0)")]
             return urlComponents.url!
+        case .roadmapJob:
+            urlComponents.path = "/roadmap/job"
+            return urlComponents.url!
+            
         }
     }
 }

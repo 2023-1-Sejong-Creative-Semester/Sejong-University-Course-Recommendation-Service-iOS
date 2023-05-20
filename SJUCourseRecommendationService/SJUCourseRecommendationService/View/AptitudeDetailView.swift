@@ -19,7 +19,7 @@ struct AptitudeDetailView: View {
     
     @State var jobRequest: IntroduceJobRequest
     @State var introduceJob: IntroduceJobResponse?
-    @State var roadmapList: Roadmaps?
+    @State var roadmapList: RoadmapJobs?
     
     @State private var contentType: ContentType = .jobInfo
     @State private var scrollOffset: CGFloat = .zero
@@ -51,7 +51,7 @@ struct AptitudeDetailView: View {
             .ignoresSafeArea()
             .task {
                 fetchIntroduceJob()
-                fetchRoadmapDetail(id: roadmapID)
+                fetchRoadmapJob(id: roadmapID)
             }
         }
     }
@@ -325,13 +325,13 @@ struct AptitudeDetailView: View {
     }
     
     @ViewBuilder
-    func subRoadmap(roadmap: Roadmap) -> some View {
+    func subRoadmap(roadmap: RoadmapJob) -> some View {
         NavigationLink {
             WebBrowserView(url: roadmap.link)
                 .navigationBarTitleDisplayMode(.inline)
         } label: {
             VStack {
-                AsyncImage(url: URL(string: roadmap.logo)) { image in
+                AsyncImage(url: URL(string: roadmap.image)) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fit)
@@ -353,12 +353,12 @@ struct AptitudeDetailView: View {
     }
     
     @ViewBuilder
-    func roadmapListArea(list: Roadmaps) -> some View {
+    func roadmapListArea(list: RoadmapJobs) -> some View {
         VStack {
             NavigationLink {
-                WebBrowserView(url: list.homepage)
-                    .navigationBarTitleDisplayMode(.inline)
-                    .tint(Color("SejongColor"))
+//                WebBrowserView(url: list.homepage)
+//                    .navigationBarTitleDisplayMode(.inline)
+//                    .tint(Color("SejongColor"))
             } label: {
                 HStack {
                     Text("로드맵")
@@ -439,10 +439,13 @@ struct AptitudeDetailView: View {
         }
     }
     
-    func fetchRoadmapDetail(id: Int) {
+    func fetchRoadmapJob(id: Int) {
         Task {
             do {
-                let request = URLRequest(url: APIURL.roadmapDetail.url(id: id))
+                var request = URLRequest(url: APIURL.roadmapJob.url())
+                request.httpMethod = "POST"
+                request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+                request.httpBody = try JSONEncoder().encode(jobRequest)
                 
                 let (data, response) = try await URLSession.shared.data(for: request)
                 
@@ -454,18 +457,9 @@ struct AptitudeDetailView: View {
                     throw APIError.responseHandling(statusCode: httpResponse.statusCode)
                 }
                 
-                if id == 1 {
-                    self.roadmapList = try JSONDecoder().decode(Roadmaps.self, from: data)
-                } else {
-                    self.roadmapList?.roadmap.append(contentsOf: try JSONDecoder().decode(Roadmaps.self, from: data).roadmap)
-                }
-                print("success \(#function)")
+                self.roadmapList = try JSONDecoder().decode(RoadmapJobs.self, from: data)
                 
-                if roadmapID < 3 {
-                    roadmapID += 1
-                    
-                    fetchRoadmapDetail(id: roadmapID)
-                }
+                print("success \(#function)")
             } catch {
                 showError = true
                 self.error = APIError.convert(error: error)

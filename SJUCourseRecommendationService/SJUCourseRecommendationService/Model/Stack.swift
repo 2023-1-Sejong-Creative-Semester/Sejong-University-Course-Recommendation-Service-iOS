@@ -7,13 +7,6 @@
 
 import Foundation
 
-enum Stack: String, Codable, CaseIterable {
-    case cLang = "C"
-    case cppLang = "C++"
-    case javaLang = "Java"
-    case pythonLang = "Python"
-    case kotlinLang = "Kotlin"
-    case springStack = "Spring"
-    case jpaStack = "JPA"
-    case gradleStack = "Gradle"
+struct Stack: Codable {
+    let stack: [String]
 }

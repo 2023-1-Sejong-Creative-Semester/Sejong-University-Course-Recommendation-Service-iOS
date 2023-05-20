@@ -64,10 +64,11 @@ struct SearchView: View {
     @State private var jobList: JobResponse?
     @State private var subjectList: [Subject] = [Subject]()
     @State private var currentCollege: Colleage = .softwareColleage
-    @State private var currentLanguage: Set<Stack> = [.cLang]
+    @State private var currentStacks: Set<String> = ["C"]
     @State private var currentTrack: Track = .electronicTrack
     @State private var currentSemester: Semester = .first
     @State private var currentJobCategory: JobCategory = .webDeveloper
+    @State private var stack: Stack?
     
     var body: some View {
         NavigationStack {
@@ -128,7 +129,7 @@ struct SearchView: View {
                         withAnimation(.easeInOut) {
                             showSelectColleage = false
                             currentCollege = .softwareColleage
-                            
+                            fetchStacks()
                             fetchJobList()
                         }
                     } label: {
@@ -273,15 +274,15 @@ struct SearchView: View {
     }
     
     @ViewBuilder
-    func filterLanguage(language: Stack) -> some View {
-        filterButton(title: language.rawValue, isSelected: currentLanguage.contains(language)) {
+    func filterLanguage(stack: String) -> some View {
+        filterButton(title: stack, isSelected: currentStacks.contains(stack)) {
             withAnimation(.easeInOut) {
-                guard !currentLanguage.contains(language) || currentLanguage.count != 1 else {
+                guard !currentStacks.contains(stack) || currentStacks.count != 1 else {
                     return
                 }
                 
-                guard let _ = currentLanguage.remove(language) else {
-                    currentLanguage.insert(language)
+                guard let _ = currentStacks.remove(stack) else {
+                    currentStacks.insert(stack)
                     fetchJobList()
                     return
                 }
@@ -384,15 +385,27 @@ struct SearchView: View {
                     case .colleage:
                         filterCollege(college: currentCollege)
                     case .language:
-                        ForEach(Stack.allCases, id: \.rawValue) { language in
-                            if currentLanguage.contains(language) {
-                                filterLanguage(language: language)
+                        if let stacks = stack {
+                            ForEach(stacks.stack, id: \.self) { stack in
+                                if currentStacks.contains(stack) {
+                                    filterLanguage(stack: stack)
+                                }
                             }
-                        }
-                        
-                        ForEach(Stack.allCases, id: \.rawValue) { language in
-                            if !currentLanguage.contains(language) {
-                                filterLanguage(language: language)
+                            
+                            ForEach(stacks.stack, id: \.self) { stack in
+                                if !currentStacks.contains(stack) {
+                                    filterLanguage(stack: stack)
+                                }
+                            }
+                        } else {
+                            HStack {
+                                Spacer()
+                                
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                                    .controlSize(.regular)
+                                
+                                Spacer()
                             }
                         }
                     case .track:
@@ -534,7 +547,7 @@ struct SearchView: View {
     func fetchJobList() {
         Task {
             do {
-                let body = JobRequest(colleage: currentCollege.rawValue, stack: currentLanguage, category: currentJobCategory.rawValue)
+                let body = JobRequest(colleage: currentCollege.rawValue, stack: currentStacks, category: currentJobCategory.rawValue)
                 
                 var request = URLRequest(url: APIURL.classifyJob.url())
                 request.httpMethod = "POST"
@@ -552,6 +565,32 @@ struct SearchView: View {
                 }
                 
                 self.jobList = try JSONDecoder().decode(JobResponse.self, from: data)
+                print("success \(#function)")
+            } catch {
+                showError = true
+                self.error = APIError.convert(error: error)
+                print("fail \(#function)")
+                print(error)
+            }
+        }
+    }
+    
+    func fetchStacks() {
+        Task {
+            do {
+                let request = URLRequest(url: APIURL.introduceStack.url())
+                
+                let (data, response) = try await URLSession.shared.data(for: request)
+                
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    throw APIError.invalidResponse
+                }
+                
+                guard httpResponse.statusCode == 200 else {
+                    throw APIError.responseHandling(statusCode: httpResponse.statusCode)
+                }
+                
+                self.stack = try JSONDecoder().decode(Stack.self, from: data)
                 print("success \(#function)")
             } catch {
                 showError = true
