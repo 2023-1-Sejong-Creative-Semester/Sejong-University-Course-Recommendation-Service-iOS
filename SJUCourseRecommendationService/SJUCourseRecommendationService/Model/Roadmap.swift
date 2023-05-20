@@ -9,7 +9,7 @@ import Foundation
 
 struct Roadmaps: Codable {
     let homepage: String
-    let roadmap: [Roadmap]
+    var roadmap: [Roadmap]
 }
 
 struct Roadmap: Codable, Identifiable {

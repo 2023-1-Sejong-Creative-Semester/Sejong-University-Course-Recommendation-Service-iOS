@@ -21,5 +21,5 @@ struct IntroduceJobResponse: Codable {
 // MARK: - JobInfo
 struct JobInfo: Codable {
     let numbering: Int
-    let category, job, instruction: String
+    let category, job, instruction, image: String
 }

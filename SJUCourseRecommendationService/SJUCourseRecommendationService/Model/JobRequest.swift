@@ -9,7 +9,7 @@ import Foundation
 
 struct JobRequest: Codable {
     var colleage: String
-    var stack: Set<Language>
+    var stack: Set<Stack>
     var category: String
 }
 

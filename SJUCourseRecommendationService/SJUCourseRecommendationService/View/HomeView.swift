@@ -324,27 +324,32 @@ struct HomeView: View {
     
     @ViewBuilder
     func subRoadmap(roadmap: Roadmap) -> some View {
-        HStack {
-            AsyncImage(url: URL(string: roadmap.logo)) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-            } placeholder: {
-                ZStack {
-                    Color.gray.opacity(0.2)
-                    
-                    ProgressView()
-                        .tint(Color("SejongColor"))
+        NavigationLink {
+            WebBrowserView(url: roadmap.link)
+                .navigationBarTitleDisplayMode(.inline)
+        } label: {
+            HStack {
+                AsyncImage(url: URL(string: roadmap.logo)) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                } placeholder: {
+                    ZStack {
+                        Color.gray.opacity(0.2)
+                        
+                        ProgressView()
+                            .tint(Color("SejongColor"))
+                    }
                 }
-            }
-            .frame(width: 100, height: 100)
-            
-            VStack {
-                Text(roadmap.name)
-                    .font(.footnote)
-                    .fontWeight(.bold)
+                .frame(width: 100, height: 100)
                 
-                Spacer()
+                VStack {
+                    Text(roadmap.name)
+                        .font(.footnote)
+                        .fontWeight(.bold)
+                    
+                    Spacer()
+                }
             }
         }
     }
@@ -358,7 +363,7 @@ struct HomeView: View {
     func fetchTrend() {
         Task {
             do {
-                let (data, response) = try await URLSession.shared.data(from: APIURL.trend.url)
+                let (data, response) = try await URLSession.shared.data(from: APIURL.trend.url())
                 
                 guard let httpResponse = response as? HTTPURLResponse else {
                     throw APIError.invalidResponse
@@ -382,7 +387,7 @@ struct HomeView: View {
     func fetchComparative() {
         Task {
             do {
-                let (data, response) = try await URLSession.shared.data(from: APIURL.comparative.url)
+                let (data, response) = try await URLSession.shared.data(from: APIURL.comparative.url())
                 
                 guard let httpResponse = response as? HTTPURLResponse else {
                     throw APIError.invalidResponse
@@ -406,7 +411,7 @@ struct HomeView: View {
     func fetchCurriculum() {
         Task {
             do {
-                let (data, response) = try await URLSession.shared.data(from: APIURL.curriculum.url)
+                let (data, response) = try await URLSession.shared.data(from: APIURL.curriculum.url())
                 
                 guard let httpResponse = response as? HTTPURLResponse else {
                     throw APIError.invalidResponse
@@ -430,7 +435,7 @@ struct HomeView: View {
     func fetchRoadmapMain() {
         Task {
             do {
-                let request = URLRequest(url: APIURL.roadmapMain.url)
+                let request = URLRequest(url: APIURL.roadmapMain.url())
                 
                 let (data, response) = try await URLSession.shared.data(for: request)
                 

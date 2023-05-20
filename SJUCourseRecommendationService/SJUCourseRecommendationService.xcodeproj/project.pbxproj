@@ -33,7 +33,7 @@
 		C5EFABB029A9E89E0006E174 /* AptitudeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5EFABAF29A9E89E0006E174 /* AptitudeDetailView.swift */; };
 		C5F1A2AE29E52401004EEAD2 /* JobResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F1A2AD29E52401004EEAD2 /* JobResponse.swift */; };
 		C5F1A2B029E52A1E004EEAD2 /* JobRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F1A2AF29E52A1E004EEAD2 /* JobRequest.swift */; };
-		C5F1A2B429E53210004EEAD2 /* Language.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F1A2B329E53210004EEAD2 /* Language.swift */; };
+		C5F1A2B429E53210004EEAD2 /* Stack.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F1A2B329E53210004EEAD2 /* Stack.swift */; };
 		C5F1A2B629E54564004EEAD2 /* IntroduceJobRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F1A2B529E54564004EEAD2 /* IntroduceJobRequest.swift */; };
 		C5F1A2B829E545C8004EEAD2 /* IntroduceJobResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F1A2B729E545C8004EEAD2 /* IntroduceJobResponse.swift */; };
 /* End PBXBuildFile section */
@@ -67,7 +67,7 @@
 		C5EFABAF29A9E89E0006E174 /* AptitudeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AptitudeDetailView.swift; sourceTree = "<group>"; };
 		C5F1A2AD29E52401004EEAD2 /* JobResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JobResponse.swift; sourceTree = "<group>"; };
 		C5F1A2AF29E52A1E004EEAD2 /* JobRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JobRequest.swift; sourceTree = "<group>"; };
-		C5F1A2B329E53210004EEAD2 /* Language.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Language.swift; sourceTree = "<group>"; };
+		C5F1A2B329E53210004EEAD2 /* Stack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stack.swift; sourceTree = "<group>"; };
 		C5F1A2B529E54564004EEAD2 /* IntroduceJobRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroduceJobRequest.swift; sourceTree = "<group>"; };
 		C5F1A2B729E545C8004EEAD2 /* IntroduceJobResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroduceJobResponse.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -107,7 +107,7 @@
 				C5F1A2AF29E52A1E004EEAD2 /* JobRequest.swift */,
 				C5F1A2B729E545C8004EEAD2 /* IntroduceJobResponse.swift */,
 				C5F1A2B529E54564004EEAD2 /* IntroduceJobRequest.swift */,
-				C5F1A2B329E53210004EEAD2 /* Language.swift */,
+				C5F1A2B329E53210004EEAD2 /* Stack.swift */,
 				C57647112A01009F00338605 /* Roadmap.swift */,
 			);
 			path = Model;
@@ -271,7 +271,7 @@
 				C555B9FD29D664F200812F43 /* IntroduceLangauge.swift in Sources */,
 				C5B34E932A0629570030A763 /* ActivityCurriculumResponse.swift in Sources */,
 				C5BBF5ED297839D100E926A2 /* ModifyInformationView.swift in Sources */,
-				C5F1A2B429E53210004EEAD2 /* Language.swift in Sources */,
+				C5F1A2B429E53210004EEAD2 /* Stack.swift in Sources */,
 				C53FF55929DBE95E009337B2 /* APIError.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

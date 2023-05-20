@@ -19,7 +19,7 @@ enum APIURL {
     case roadmapMain
     case roadmapDetail
     
-    var url: URL {
+    func url(id: Int? = nil) -> URL {
         var urlComponents = URLComponents(string: "http://34.168.80.42:3001")!
         
         switch self {
@@ -55,6 +55,7 @@ enum APIURL {
             return urlComponents.url!
         case .roadmapDetail:
             urlComponents.path = "/roadmap/detail"
+            urlComponents.queryItems = [URLQueryItem(name: "index", value: "\(id ?? 0)")]
             return urlComponents.url!
         }
     }

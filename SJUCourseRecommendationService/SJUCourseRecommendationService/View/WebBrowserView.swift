@@ -77,8 +77,6 @@ struct WebBrowserView: View {
             }
             
             HStack {
-                Spacer()
-                
                 backButton()
                 
                 Spacer()
@@ -94,6 +92,8 @@ struct WebBrowserView: View {
                 shareButton()
                 
                 Spacer()
+                
+                safariButton()
             }
             .padding()
         }
@@ -112,6 +112,7 @@ struct WebBrowserView: View {
             }
         } label: {
             Image(systemName: "chevron.backward")
+                .font(.title3)
         }
         .disabled(!wKWebViewModel.publishedCanGoBack)
     }
@@ -124,6 +125,7 @@ struct WebBrowserView: View {
             }
         } label: {
             Image(systemName: "chevron.forward")
+                .font(.title3)
         }
         .disabled(!wKWebViewModel.publishedCanForward)
     }
@@ -134,6 +136,7 @@ struct WebBrowserView: View {
             self.wKWebViewModel.reload()
         } label: {
             Image(systemName: "arrow.clockwise")
+                .font(.title3)
         }
     }
     
@@ -144,6 +147,21 @@ struct WebBrowserView: View {
             UIApplication.shared.windows.first?.rootViewController?.present(activityViewController, animated: true, completion: nil)
         } label: {
             Image(systemName: "square.and.arrow.up")
+                .font(.title3)
+        }
+    }
+    
+    @ViewBuilder
+    func safariButton() -> some View {
+        Button {
+            guard let websiteURL = URL(string: url) else {
+                return
+            }
+
+            UIApplication.shared.open(websiteURL, options: [:], completionHandler: nil)
+        } label: {
+            Image(systemName: "safari")
+                .font(.title3)
         }
     }
 }
