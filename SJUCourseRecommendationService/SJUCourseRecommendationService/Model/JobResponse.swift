@@ -13,11 +13,11 @@ struct JobResponse: Codable {
 
 struct Job: Codable, Identifiable {
     let id: Int
-    let category, job, instruction: String
+    let category, job, instruction, image: String
     let stack: [String]
     
     enum CodingKeys: String, CodingKey {
         case id = "numbering"
-        case category, job, instruction, stack
+        case category, job, instruction, stack, image
     }
 }

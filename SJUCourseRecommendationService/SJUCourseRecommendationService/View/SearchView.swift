@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct SearchView: View {
+    @Namespace var heroEffect
+    
     enum SearchType: String {
         case job = "적성검색"
         case subject = "수업검색"
@@ -26,13 +28,13 @@ struct SearchView: View {
         case electronicColleage = "전자정보통신공학대학"
     }
     
-    enum Track: String {
+    enum Track: String, CaseIterable {
         case electronicTrack = "전자트랙"
         case informationTrack = "정보트랙"
         case communicationTrack = "통신트랙"
     }
     
-    enum Semester: String {
+    enum Semester: String, CaseIterable {
         case first = "01-01"
         case second = "01-02"
         case third = "02-01"
@@ -43,10 +45,13 @@ struct SearchView: View {
         case eighth = "04-02"
     }
     
-    enum JobCategory: String, Codable {
-        case fullStackDeveloper = "풀스택 개발"
-        case serverDeveloper = "서버 개발"
+    enum JobCategory: String, Codable, CaseIterable {
         case webDeveloper = "웹 개발"
+        case mobileDeveloper = "모바일 개발"
+        case engineer = "엔지니어"
+        case dataEngineer = "데이터"
+        case gameDeveloper = "게임"
+        case security = "보안"
     }
     
     @Environment(\.colorScheme) var colorScheme
@@ -59,10 +64,11 @@ struct SearchView: View {
     @State private var jobList: JobResponse?
     @State private var subjectList: [Subject] = [Subject]()
     @State private var currentCollege: Colleage = .softwareColleage
-    @State private var currentLanguage: Set<Language> = [.CLanguage]
+    @State private var currentStacks: Set<String> = ["C"]
     @State private var currentTrack: Track = .electronicTrack
     @State private var currentSemester: Semester = .first
     @State private var currentJobCategory: JobCategory = .webDeveloper
+    @State private var stack: Stack?
     
     var body: some View {
         NavigationStack {
@@ -123,7 +129,7 @@ struct SearchView: View {
                         withAnimation(.easeInOut) {
                             showSelectColleage = false
                             currentCollege = .softwareColleage
-                            
+                            fetchStacks()
                             fetchJobList()
                         }
                     } label: {
@@ -240,15 +246,25 @@ struct SearchView: View {
     func filterButton(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             if !showSelectColleage {
-                Text(title)
-                    .foregroundColor(isSelected ? Color("SejongColor") : .primary)
+                HStack {
+                    Text(title)
+                        .foregroundColor(isSelected ? Color("SejongColor") : .primary)
+                        .matchedGeometryEffect(id: title, in: heroEffect)
+                    
+                    if isSelected {
+                        Label("삭제", systemImage: "xmark")
+                            .font(.caption)
+                            .labelStyle(.iconOnly)
+                            .foregroundColor(isSelected ? Color("SejongColor") : .primary)
+                    }
+                }
             }
         }
     }
     
     @ViewBuilder
     func filterCollege(college: Colleage) -> some View {
-        filterButton(title: college.rawValue, isSelected: college == currentCollege) {
+        filterButton(title: college.rawValue, isSelected: false) {
             withAnimation(.easeInOut) {
                 currentCollege = college
                 
@@ -258,15 +274,15 @@ struct SearchView: View {
     }
     
     @ViewBuilder
-    func filterLanguage(language: Language) -> some View {
-        filterButton(title: language.rawValue, isSelected: currentLanguage.contains(language)) {
+    func filterLanguage(stack: String) -> some View {
+        filterButton(title: stack, isSelected: currentStacks.contains(stack)) {
             withAnimation(.easeInOut) {
-                guard !currentLanguage.contains(language) || currentLanguage.count != 1 else {
+                guard !currentStacks.contains(stack) || currentStacks.count != 1 else {
                     return
                 }
                 
-                guard let _ = currentLanguage.remove(language) else {
-                    currentLanguage.insert(language)
+                guard let _ = currentStacks.remove(stack) else {
+                    currentStacks.insert(stack)
                     fetchJobList()
                     return
                 }
@@ -340,12 +356,14 @@ struct SearchView: View {
                     }
             }
             
-            filterContentBar(filterContent: .jobCategory)
-                .background(alignment: .top) {
-                    Rectangle()
-                        .fill(.secondary)
-                        .frame(height: 0.25)
-                }
+            if currentCollege == .softwareColleage {
+                filterContentBar(filterContent: .jobCategory)
+                    .background(alignment: .top) {
+                        Rectangle()
+                            .fill(.secondary)
+                            .frame(height: 0.25)
+                    }
+            }
         }
         .background(Color("ShapeBackgroundColor"))
     }
@@ -355,7 +373,11 @@ struct SearchView: View {
         HStack(spacing: 0) {
             Text(filterContent.rawValue)
                 .font(.headline)
-                .frame(width: 80)
+                .padding(.horizontal)
+            
+            Rectangle()
+                .fill(Color("SejongColor"))
+                .frame(width: 2, height: 20)
             
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 20) {
@@ -363,27 +385,66 @@ struct SearchView: View {
                     case .colleage:
                         filterCollege(college: currentCollege)
                     case .language:
-                        filterLanguage(language: .CLanguage)
-                        filterLanguage(language: .CPPLanguage)
-                        filterLanguage(language: .JavaLanguage)
-                        filterLanguage(language: .PythonLanguage)
+                        if let stacks = stack {
+                            ForEach(stacks.stack, id: \.self) { stack in
+                                if currentStacks.contains(stack) {
+                                    filterLanguage(stack: stack)
+                                }
+                            }
+                            
+                            ForEach(stacks.stack, id: \.self) { stack in
+                                if !currentStacks.contains(stack) {
+                                    filterLanguage(stack: stack)
+                                }
+                            }
+                        } else {
+                            HStack {
+                                Spacer()
+                                
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                                    .controlSize(.regular)
+                                
+                                Spacer()
+                            }
+                        }
                     case .track:
-                        filterTrack(track: .electronicTrack)
-                        filterTrack(track: .informationTrack)
-                        filterTrack(track: .communicationTrack)
+                        ForEach(Track.allCases, id: \.rawValue) { track in
+                            if currentTrack == track {
+                                filterTrack(track: track)
+                            }
+                        }
+                        
+                        ForEach(Track.allCases, id: \.rawValue) { track in
+                            if currentTrack != track {
+                                filterTrack(track: track)
+                            }
+                        }
                     case .semester:
-                        filterSemester(semester: .first)
-                        filterSemester(semester: .second)
-                        filterSemester(semester: .third)
-                        filterSemester(semester: .fourth)
-                        filterSemester(semester: .fifth)
-                        filterSemester(semester: .sixth)
-                        filterSemester(semester: .seventh)
-                        filterSemester(semester: .eighth)
+                        ForEach(Semester.allCases, id: \.rawValue) { semester in
+                            if currentSemester == semester {
+                                filterSemester(semester: semester)
+                            }
+                        }
+                        
+                        ForEach(Semester.allCases, id: \.rawValue) { semester in
+                            if currentSemester != semester {
+                                filterSemester(semester: semester)
+                            }
+                        }
+                        
                     case .jobCategory:
-                        filterJobCategory(category: .fullStackDeveloper)
-                        filterJobCategory(category: .serverDeveloper)
-                        filterJobCategory(category: .webDeveloper)
+                        ForEach(JobCategory.allCases, id: \.rawValue) { jobCategory in
+                            if currentJobCategory == jobCategory {
+                                filterJobCategory(category: jobCategory)
+                            }
+                        }
+                        
+                        ForEach(JobCategory.allCases, id: \.rawValue) { jobCategory in
+                            if currentJobCategory != jobCategory {
+                                filterJobCategory(category: jobCategory)
+                            }
+                        }
                     }
                 }
                 .font(.subheadline)
@@ -424,11 +485,23 @@ struct SearchView: View {
     @ViewBuilder
     func subAptitude(job: Job) -> some View {
         HStack {
-            Color(.secondaryLabel)
-                .frame(width: 100, height: 100)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-                .shadow(radius: 5)
-                .padding(.trailing)
+            AsyncImage(url: URL(string: job.image)) { img in
+                img
+                    .resizable()
+                    .scaledToFit()
+            } placeholder: {
+                ZStack {
+                    Color.secondary.opacity(0.5)
+                    
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .tint(Color("SejongColor"))
+                }
+            }
+            .frame(width: 100, height: 100)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .shadow(radius: 5)
+            .padding(.trailing)
             
             VStack(alignment: .leading, spacing: 5) {
                 Text(job.job)
@@ -474,9 +547,9 @@ struct SearchView: View {
     func fetchJobList() {
         Task {
             do {
-                let body = JobRequest(colleage: currentCollege.rawValue, stack: currentLanguage, category: currentJobCategory.rawValue)
+                let body = JobRequest(colleage: currentCollege.rawValue, stack: currentStacks, category: currentJobCategory.rawValue)
                 
-                var request = URLRequest(url: APIURL.classifyJob.url)
+                var request = URLRequest(url: APIURL.classifyJob.url())
                 request.httpMethod = "POST"
                 request.addValue("application/json", forHTTPHeaderField: "Content-Type")
                 request.httpBody = try JSONEncoder().encode(body)
@@ -492,6 +565,32 @@ struct SearchView: View {
                 }
                 
                 self.jobList = try JSONDecoder().decode(JobResponse.self, from: data)
+                print("success \(#function)")
+            } catch {
+                showError = true
+                self.error = APIError.convert(error: error)
+                print("fail \(#function)")
+                print(error)
+            }
+        }
+    }
+    
+    func fetchStacks() {
+        Task {
+            do {
+                let request = URLRequest(url: APIURL.introduceStack.url())
+                
+                let (data, response) = try await URLSession.shared.data(for: request)
+                
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    throw APIError.invalidResponse
+                }
+                
+                guard httpResponse.statusCode == 200 else {
+                    throw APIError.responseHandling(statusCode: httpResponse.statusCode)
+                }
+                
+                self.stack = try JSONDecoder().decode(Stack.self, from: data)
                 print("success \(#function)")
             } catch {
                 showError = true
