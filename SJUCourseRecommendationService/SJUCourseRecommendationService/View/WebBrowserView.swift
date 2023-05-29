@@ -54,7 +54,7 @@ struct WebView: UIViewRepresentable {
 }
 
 struct WebBrowserView: View {
-    @ObservedObject private var wKWebViewModel: WKWebViewModel = WKWebViewModel()
+    @StateObject private var wKWebViewModel: WKWebViewModel = WKWebViewModel()
     
     let url: String
     
