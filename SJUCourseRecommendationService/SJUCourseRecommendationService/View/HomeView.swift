@@ -35,9 +35,9 @@ struct HomeView: View {
             ScrollView {
                 searchButton()
                 
-                activityComparativeList(title: "비교과 활동", activity: comparative?.results)
+                activityComparativeList(title: "두드림", activity: comparative?.results)
                 
-                activityCurriculumList(title: "취업 지원 활동", activity: curriculum?.results)
+                activityCurriculumList(title: "유드림", activity: curriculum?.results)
                 
                 recruitTrendList()
                 
@@ -301,7 +301,18 @@ struct HomeView: View {
     @ViewBuilder
     func roadmapGrid() -> some View {
         VStack {
-            titleStyle(title: "로드맵")
+            HStack {
+                titleStyle(title: "로드맵")
+                
+                Spacer()
+                
+                NavigationLink {
+                    RoadmapView()
+                } label: {
+                    Text("더보기")
+                }
+                
+            }
             
             if let roadmaps = roadmapList {
                 LazyVGrid(columns: roadmapColumns) {

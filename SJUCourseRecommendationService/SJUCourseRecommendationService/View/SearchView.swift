@@ -62,7 +62,7 @@ struct SearchView: View {
     @State private var showError: Bool = false
     @State private var showSelectColleage: Bool = true
     @State private var jobList: JobResponse?
-    @State private var subjectList: [Subject] = [Subject]()
+    @State private var subjectList: SubjectResponse?
     @State private var currentCollege: Colleage = .softwareColleage
     @State private var currentStacks: Set<String> = ["C"]
     @State private var currentTrack: Track = .electronicTrack
@@ -91,7 +91,7 @@ struct SearchView: View {
             Button {
                 withAnimation(.easeInOut) {
                     error = nil
-                    fetchJobList()
+                    fetchAction()
                 }
             } label: {
                 Text("다시시도")
@@ -130,7 +130,8 @@ struct SearchView: View {
                             showSelectColleage = false
                             currentCollege = .softwareColleage
                             fetchStacks()
-                            fetchJobList()
+                            
+                            fetchAction()
                         }
                     } label: {
                         VStack {
@@ -186,8 +187,9 @@ struct SearchView: View {
                         withAnimation(.easeInOut) {
                             showSelectColleage = false
                             currentCollege = .electronicColleage
+                            fetchStacks()
                             
-                            fetchJobList()
+                            fetchAction()
                         }
                     } label: {
                         VStack {
@@ -268,7 +270,7 @@ struct SearchView: View {
             withAnimation(.easeInOut) {
                 currentCollege = college
                 
-                fetchJobList()
+                fetchAction()
             }
         }
     }
@@ -283,11 +285,11 @@ struct SearchView: View {
                 
                 guard let _ = currentStacks.remove(stack) else {
                     currentStacks.insert(stack)
-                    fetchJobList()
+                    fetchAction()
                     return
                 }
                 
-                fetchJobList()
+                fetchAction()
             }
         }
     }
@@ -298,7 +300,7 @@ struct SearchView: View {
             withAnimation(.easeInOut) {
                 currentTrack = track
                 
-                fetchJobList()
+                fetchAction()
             }
         }
     }
@@ -309,7 +311,7 @@ struct SearchView: View {
             withAnimation(.easeInOut) {
                 currentSemester = semester
                 
-                fetchJobList()
+                fetchAction()
             }
         }
     }
@@ -320,7 +322,7 @@ struct SearchView: View {
             withAnimation(.easeInOut) {
                 currentJobCategory = category
                 
-                fetchJobList()
+                fetchAction()
             }
         }
     }
@@ -462,10 +464,21 @@ struct SearchView: View {
                     ForEach(list.results) { job in
                         NavigationLink {
                             AptitudeDetailView(jobRequest: IntroduceJobRequest(job: job.job, category: job.category))
-                                .toolbarBackground(Color("BackgroundColor").opacity(0.1), for: .navigationBar)
-                                .scrollContentBackground(.hidden)
                         } label: {
-                            subAptitude(job: job)
+                            subAptitudeJob(job: job)
+                        }
+                        .tint(.primary)
+                    }
+                }
+            }
+        } else if let list = subjectList {
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(list.subject, id: \.element.id) { subject in
+                        NavigationLink {
+                            AptitudeDetailView(subjectRequest: IntroduceSubjectRequest(colleage: currentCollege.rawValue, stack: subject.element.stack, category: currentJobCategory.rawValue, semester: subject.element.semeter, department: subject.element.semeter, cName: subject.element.cName))
+                        } label: {
+                            subAptitudeLecture(subject: subject.element)
                         }
                         .tint(.primary)
                     }
@@ -483,7 +496,50 @@ struct SearchView: View {
     }
     
     @ViewBuilder
-    func subAptitude(job: Job) -> some View {
+    func subAptitudeLecture(subject: Element) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("\(subject.credit)학점")
+                    .foregroundColor(.secondary)
+                
+                Text(subject.semeter)
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+            }
+            .font(.caption)
+            
+            HStack {
+                Text("\(subject.cName)")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                
+                Spacer()
+            }
+            
+            Text(subject.instruction.shortScript)
+                .font(.footnote)
+                .multilineTextAlignment(.leading)
+            
+            HStack {
+                ForEach(subject.stack, id:\.hashValue) { stack in
+                    titleTag(tag: stack)
+                }
+                
+                Spacer()
+            }
+        }
+        .padding()
+        .background {
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color("ShapeBackgroundColor"))
+        }
+        .padding(.horizontal)
+        .padding(.top)
+    }
+    
+    @ViewBuilder
+    func subAptitudeJob(job: Job) -> some View {
         HStack {
             AsyncImage(url: URL(string: job.image)) { img in
                 img
@@ -507,7 +563,7 @@ struct SearchView: View {
                 Text(job.job)
                     .font(.headline)
                 
-                Text(job.instruction)
+                Text(job.instruction.shortScript)
                     .font(.caption)
                 
                 ScrollView(.horizontal) {
@@ -523,7 +579,7 @@ struct SearchView: View {
             .padding(.vertical, 5)
         }
         .padding()
-        .background() {
+        .background {
             RoundedRectangle(cornerRadius: 10)
                 .fill(Color("ShapeBackgroundColor"))
         }
@@ -542,6 +598,15 @@ struct SearchView: View {
                 RoundedRectangle(cornerRadius: 20)
                     .stroke(.secondary)
             }
+    }
+    
+    func fetchAction() {
+        switch searchType {
+        case .job:
+            fetchJobList()
+        case .subject:
+            fetchSubjectList()
+        }
     }
     
     func fetchJobList() {
@@ -565,6 +630,37 @@ struct SearchView: View {
                 }
                 
                 self.jobList = try JSONDecoder().decode(JobResponse.self, from: data)
+                print("success \(#function)")
+            } catch {
+                showError = true
+                self.error = APIError.convert(error: error)
+                print("fail \(#function)")
+                print(error)
+            }
+        }
+    }
+    
+    func fetchSubjectList() {
+        Task {
+            do {
+                let body = SubjectRequest(colleage: currentCollege.rawValue, stack: currentStacks, category: currentJobCategory.rawValue, semester: currentSemester.rawValue)
+                
+                var request = URLRequest(url: APIURL.classifySubject.url())
+                request.httpMethod = "POST"
+                request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+                request.httpBody = try JSONEncoder().encode(body)
+                
+                let (data, response) = try await URLSession.shared.data(for: request)
+                
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    throw APIError.invalidResponse
+                }
+                
+                guard httpResponse.statusCode == 200 else {
+                    throw APIError.responseHandling(statusCode: httpResponse.statusCode)
+                }
+                
+                self.subjectList = try JSONDecoder().decode(SubjectResponse.self, from: data)
                 print("success \(#function)")
             } catch {
                 showError = true
@@ -605,7 +701,7 @@ struct SearchView: View {
 struct SearchView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
-            SearchView(searchType: .job)
+            SearchView(searchType: .subject)
                 .navigationBarTitleDisplayMode(.inline)
         }
     }

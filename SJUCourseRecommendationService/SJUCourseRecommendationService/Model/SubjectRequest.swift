@@ -9,7 +9,7 @@ import Foundation
 
 struct SubjectRequest: Codable {
     var colleage: String
-    var stack: [String]
+    var stack: Set<String>
     var category: String
     var semester: String
 }

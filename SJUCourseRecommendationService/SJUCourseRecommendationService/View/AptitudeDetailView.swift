@@ -17,8 +17,10 @@ struct AptitudeDetailView: View {
     
     @Environment(\.colorScheme) var colorScheme
     
-    @State var jobRequest: IntroduceJobRequest
+    @State var jobRequest: IntroduceJobRequest?
+    @State var subjectRequest: IntroduceSubjectRequest?
     @State var introduceJob: IntroduceJobResponse?
+    @State var introduceSubject: IntroduceSubjectResponse?
     @State var roadmapList: RoadmapJobs?
     
     @State private var contentType: ContentType = .jobInfo
@@ -26,20 +28,29 @@ struct AptitudeDetailView: View {
     @State private var roadmapScrollOffest: CGFloat = .zero
     @State private var error: APIError?
     @State private var showError: Bool = false
-    @State private var roadmapID: Int = 1
+    
+//    init(jobRequest: IntroduceJobRequest? = nil, subjectRequest: IntroduceSubjectRequest? = nil, introduceJob: IntroduceJobResponse? = nil, introduceSubject: IntroduceSubjectResponse? = nil, roadmapList: RoadmapJobs? = nil) {
+//        self.jobRequest = jobRequest
+//        self.subjectRequest = subjectRequest
+//        self.introduceJob = introduceJob
+//        self.introduceSubject = introduceSubject
+//        self.roadmapList = roadmapList
+//    }
     
     var body: some View {
         GeometryReader { reader in
-            ZStack(alignment: .top) {
-                image(width: reader.size.width)
-                
-                content(width: reader.size.width)
+            ScrollView {
+                VStack {
+                    image(width: reader.size.width)
+                    
+                    content(width: reader.size.width)
+                }
             }
             .alert("오류", isPresented: $showError) {
                 Button {
                     withAnimation(.easeInOut) {
                         error = nil
-                        fetchIntroduceJob()
+                        fetchIntroduce()
                     }
                 } label: {
                     Text("다시시도")
@@ -48,128 +59,137 @@ struct AptitudeDetailView: View {
                 Text(error?.errorMessage ?? "")
             }
             .background(Color("BackgroundColor"))
-            .ignoresSafeArea()
             .task {
-                fetchIntroduceJob()
-                fetchRoadmapJob(id: roadmapID)
+                fetchIntroduce()
+                
+                if jobRequest != nil {
+                    fetchRoadmapJob()
+                }
             }
         }
     }
     
     @ViewBuilder
     func image(width: CGFloat) -> some View {
-        GeometryReader { imageReader in
-            Group {
-                if let jobImage = introduceJob?.jobInfo.image {
-                    AsyncImage(url: URL(string: jobImage)) { img in
-                        img
-                            .resizable()
-                            .scaledToFill()
-                    } placeholder: {
-                        ZStack {
-                            Color.secondary
-                                .opacity(0.5)
-                            
-                            ProgressView()
-                                .progressViewStyle(.circular)
-                                .controlSize(.large)
-                                .tint(Color("SejongColor"))
-                        }
+        Group {
+            if let jobImage = introduceJob?.jobInfo.image {
+                AsyncImage(url: URL(string: jobImage)) { img in
+                    img
+                        .resizable()
+                        .scaledToFill()
+                } placeholder: {
+                    ZStack {
+                        Color.secondary
+                            .opacity(0.5)
+                        
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                            .controlSize(.large)
+                            .tint(Color("SejongColor"))
                     }
-                    .onAppear() {
-                        print(jobImage)
-                    }
-                } else {
-                    Color.secondary
-                        .opacity(0.5)
+                }
+                .onAppear() {
+                    print(jobImage)
                 }
             }
-            .frame(height: width - (scrollOffset < 0 ? scrollOffset : 0))
-            .overlay(alignment: .top) {
-                LinearGradient(colors: [.black.opacity(0.5),
-                                        .black.opacity(0.4),
-                                        .black.opacity(0.3),
-                                        .black.opacity(0.2),
-                                        .black.opacity(0.1),
-                                        .black.opacity(0.08),
-                                        .black.opacity(0.06),
-                                        .black.opacity(0.04),
-                                        .black.opacity(0.02),
-                                        .black.opacity(0)
-                ], startPoint: .top, endPoint: .bottom)
-                .opacity(0.6)
-            }
-            .overlay {
-                Color(.black)
-                    .opacity(scrollOffset / (width * 2))
-            }
+        }
+        .frame(width: width, height: width)
+        .overlay {
+            Color(.black)
+                .opacity(scrollOffset / (width * 2))
         }
     }
     
     @ViewBuilder
     func content(width: CGFloat) -> some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                if let job = introduceJob {
-                    Spacer()
-                        .frame(height: width)
-                    
-                    VStack {
-                        HStack {
-                            Text(job.jobInfo.job)
-                                .font(.title2)
-                                .fontWeight(.bold)
-                            
-                            Spacer()
+        LazyVStack(spacing: 0) {
+            if let job = introduceJob {
+                VStack {
+                    HStack {
+                        Text(job.jobInfo.job)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Spacer()
+                    }
+                }
+                .padding([.horizontal, .top])
+                .background(Color("BackgroundColor"))
+                
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack {
+                        ForEach(job.stack, id: \.hashValue) { stack in
+                            titleTag(tag: stack)
                         }
                     }
-                    .padding([.horizontal, .top])
+                    .padding(5)
+                }
+                .padding([.leading, .vertical])
+                .background(Color("BackgroundColor"))
+                
+                Rectangle()
+                    .fill(.gray.opacity(0.2))
                     .background(Color("BackgroundColor"))
-                    
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        LazyHStack {
-                            ForEach(job.stack, id: \.hashValue) { stack in
-                                titleTag(tag: stack)
-                            }
+                
+                switch contentType {
+                case .jobInfo:
+                    jobInformation(job: job)
+                case .subject:
+                    lectureList(subject: job.subject)
+                }
+            } else if let subject = introduceSubject {
+                VStack {
+                    HStack {
+                        Text("\(subject.element.credit)학점")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                        
+                        Spacer()
+                    }
+                    HStack {
+                        Text(subject.element.cName)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Spacer()
+                    }
+                }
+                .padding([.horizontal, .top])
+                .background(Color("BackgroundColor"))
+                
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack {
+                        ForEach(subject.element.stack, id: \.hashValue) { stack in
+                            titleTag(tag: stack)
                         }
-                        .padding(5)
                     }
-                    .padding([.leading, .vertical])
+                    .padding(5)
+                }
+                .padding([.leading, .vertical])
+                .background(Color("BackgroundColor"))
+                
+                Rectangle()
+                    .fill(.gray.opacity(0.2))
                     .background(Color("BackgroundColor"))
-                    
-                    Rectangle()
-                        .fill(.gray.opacity(0.2))
-                        .background(Color("BackgroundColor"))
-                    
-                    switch contentType {
-                    case .jobInfo:
-                        jobInformation(job: job)
-                    case .subject:
-                        lectureList(cName: job.cName)
-                    }
-                } else {
-                    Spacer()
-                        .frame(height: width)
-                    
-                    ProgressView()
-                        .progressViewStyle(.circular)
-                        .controlSize(.regular)
-                        .padding()
+                
+                switch contentType {
+                case .jobInfo:
+                    subjectInformation(subject: subject.element)
+                case .subject:
+                    jobList(job: subject.job)
+                    EmptyView()
                 }
-            }
-            .background {
-                GeometryReader { reader in
-                    let offset = -reader.frame(in: .named("CONTENT")).minY
-                    Color.clear.preference(key: ScrollViewOffsetPreferenceKey.self, value: offset)
-                }
+            } else {
+                Spacer()
+                    .frame(height: width)
+                
+                ProgressView()
+                    .progressViewStyle(.circular)
+                    .controlSize(.regular)
+                    .padding()
             }
         }
-//        .coordinateSpace(name: "CONTENT")
-//        .onPreferenceChange(ScrollViewOffsetPreferenceKey.self) { value in
-//            scrollOffset = value
-//        }
     }
-    
     @ViewBuilder
     func titleTag(tag: String) -> some View {
         Text(tag)
@@ -194,7 +214,7 @@ struct AptitudeDetailView: View {
                 HStack {
                     Spacer()
                     
-                    Text("직업 설명")
+                    Text(introduceJob != nil ? "직업 설명" : "수업 설명")
                         .foregroundColor(contentType == .jobInfo ? .white : .primary)
                     
                     Spacer()
@@ -222,7 +242,7 @@ struct AptitudeDetailView: View {
                 HStack {
                     Spacer()
                     
-                    Text("관련 수업")
+                    Text(introduceJob != nil ? "관련 수업" : "관련 직무")
                         .foregroundColor(contentType == .subject ? .white : .primary)
                     
                     Spacer()
@@ -253,7 +273,7 @@ struct AptitudeDetailView: View {
     func jobInformation(job: IntroduceJobResponse) -> some View {
         LazyVStack(alignment: .leading, pinnedViews: [.sectionHeaders]) {
             Section {
-                Text(job.jobInfo.instruction)
+                Text(job.jobInfo.instruction.longScript)
                     .padding()
                 
                 if let list = roadmapList {
@@ -268,11 +288,26 @@ struct AptitudeDetailView: View {
     }
     
     @ViewBuilder
-    func lectureList(cName: [String]) -> some View {
+    func subjectInformation(subject: Element) -> some View {
+        LazyVStack(alignment: .leading, pinnedViews: [.sectionHeaders]) {
+            Section {
+                Text(subject.instruction.longScript)
+                    .padding()
+                
+            } header: {
+                contentSelection()
+                    .background(Color("BackgroundColor"))
+            }
+        }
+        .background(Color("BackgroundColor"))
+    }
+    
+    @ViewBuilder
+    func lectureList(subject: [Subject]) -> some View {
         LazyVStack(pinnedViews: [.sectionHeaders]) {
             Section {
-                ForEach(cName, id: \.hashValue) { title in
-                    subLecture(title: title)
+                ForEach(subject, id: \.element.id) { sub in
+                    subLecture(subject: sub.element)
                 }
             } header: {
                 contentSelection()
@@ -283,13 +318,44 @@ struct AptitudeDetailView: View {
     }
     
     @ViewBuilder
-    func subLecture(title: String) -> some View {
+    func jobList(job: [String]) -> some View {
+        LazyVStack(pinnedViews: [.sectionHeaders]) {
+            Section {
+                ForEach(job, id: \.hashValue) { elem in
+                    VStack {
+                        HStack {
+                            Text(elem)
+                                .font(.title3)
+                                .fontWeight(.semibold)
+                                .padding(.vertical)
+                            
+                            
+                            Spacer()
+                        }
+                        .padding(.horizontal)
+                    }
+                    .background(alignment: .bottom) {
+                        Rectangle()
+                            .fill(.secondary.opacity(colorScheme == .dark ? 0.5 : 1))
+                            .frame(height: 0.5)
+                    }
+                }
+            } header: {
+                contentSelection()
+                    .background(Color("BackgroundColor"))
+            }
+        }
+        .background(Color("BackgroundColor"))
+    }
+    
+    @ViewBuilder
+    func subLecture(subject: Element) -> some View {
         VStack(spacing: 10) {
             HStack {
-                Text("3학점")
+                Text("\(subject.credit)학점")
                     .foregroundColor(.secondary)
                 
-                Text("2 - 2")
+                Text(subject.semeter)
                     .foregroundColor(.secondary)
                 
                 Spacer()
@@ -297,21 +363,20 @@ struct AptitudeDetailView: View {
             .font(.caption)
             
             HStack {
-                Text("\(title)")
+                Text("\(subject.cName)")
                     .font(.title3)
                     .fontWeight(.semibold)
                 
                 Spacer()
             }
             
-            Text("웹프로그래밍은 머 쓰고 뭐 쓰고 무 하고웹프로그래밍은 머 쓰고 뭐 쓰고 무 하고웹프로그래밍은 머 쓰고 뭐 쓰고 무 하고웹프로그래밍은 머 쓰고 뭐 쓰고 무 하고웹프로그래밍은 머 쓰고 뭐 쓰고 무 하고웹프로그래밍은 머 쓰고 뭐 쓰고 무 하고")
+            Text(subject.instruction.longScript)
                 .font(.footnote)
             
             HStack {
-                titleTag(tag: "#웹")
-                titleTag(tag: "#HTML")
-                titleTag(tag: "#CSS")
-                titleTag(tag: "#JavaScript")
+                ForEach(subject.stack, id:\.hashValue) { stack in
+                    titleTag(tag: stack)
+                }
                 
                 Spacer()
             }
@@ -390,17 +455,6 @@ struct AptitudeDetailView: View {
                     }
                 }
                 .padding()
-//                .coordinateSpace(name: "ROADMAP")
-//                .onPreferenceChange(ScrollViewOffsetPreferenceKey.self) { value in
-//                    roadmapScrollOffest = value
-//                }
-//                .onChange(of: roadmapScrollOffest) { value in
-//                    if value >= CGFloat(800 * roadmapID), roadmapID <= 5 {
-//                        roadmapID += 1
-//
-//                        fetchRoadmapDetail(id: roadmapID)
-//                    }
-//                }
             
             
             Rectangle()
@@ -410,26 +464,47 @@ struct AptitudeDetailView: View {
         .padding(.bottom, 50)
     }
     
-    func fetchIntroduceJob() {
+    func fetchIntroduce() {
         Task {
             do {
-                var request = URLRequest(url: APIURL.classifyJobIntroduce.url())
-                request.httpMethod = "POST"
-                request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-                request.httpBody = try JSONEncoder().encode(jobRequest)
-                
-                let (data, response) = try await URLSession.shared.data(for: request)
-                
-                guard let httpResponse = response as? HTTPURLResponse else {
-                    throw APIError.invalidResponse
+                if let job = jobRequest {
+                    var request = URLRequest(url: APIURL.classifyJobIntroduce.url())
+                    request.httpMethod = "POST"
+                    request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+                    request.httpBody = try JSONEncoder().encode(job)
+                    
+                    let (data, response) = try await URLSession.shared.data(for: request)
+                    
+                    guard let httpResponse = response as? HTTPURLResponse else {
+                        throw APIError.invalidResponse
+                    }
+                    
+                    guard httpResponse.statusCode == 200 else {
+                        throw APIError.responseHandling(statusCode: httpResponse.statusCode)
+                    }
+                    
+                    self.introduceJob = try JSONDecoder().decode(IntroduceJobResponse.self, from: data)
                 }
                 
-                guard httpResponse.statusCode == 200 else {
-                    throw APIError.responseHandling(statusCode: httpResponse.statusCode)
+                if let subject = subjectRequest {
+                    var request = URLRequest(url: APIURL.classifySubjectIntroduce.url())
+                    request.httpMethod = "POST"
+                    request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+                    request.httpBody = try JSONEncoder().encode(subject)
+                    
+                    let (data, response) = try await URLSession.shared.data(for: request)
+                    
+                    guard let httpResponse = response as? HTTPURLResponse else {
+                        throw APIError.invalidResponse
+                    }
+                    
+                    guard httpResponse.statusCode == 200 else {
+                        throw APIError.responseHandling(statusCode: httpResponse.statusCode)
+                    }
+                    
+                    self.introduceSubject = try JSONDecoder().decode(IntroduceSubjectResponse.self, from: data)
+                    print("success \(#function)")
                 }
-                
-                self.introduceJob = try JSONDecoder().decode(IntroduceJobResponse.self, from: data)
-                print("success \(#function)")
             } catch {
                 showError = true
                 self.error = APIError.convert(error: error)
@@ -439,7 +514,7 @@ struct AptitudeDetailView: View {
         }
     }
     
-    func fetchRoadmapJob(id: Int) {
+    func fetchRoadmapJob() {
         Task {
             do {
                 var request = URLRequest(url: APIURL.roadmapJob.url())
@@ -473,7 +548,7 @@ struct AptitudeDetailView: View {
 struct AptitudeDetailView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
-            AptitudeDetailView(jobRequest: IntroduceJobRequest(job: "풀스택 개발자", category: "웹 개발"))
+            AptitudeDetailView(jobRequest: nil, subjectRequest: IntroduceSubjectRequest(colleage: "소프트웨어융합대학", stack: ["C", "C++", "Java"], category: "웹 개발", semester: "01-01", department: "소프트웨어학과", cName: "C프로그래밍및실습"))
                 .navigationBarTitleDisplayMode(.inline)
         }
     }

@@ -13,7 +13,8 @@ struct JobResponse: Codable {
 
 struct Job: Codable, Identifiable {
     let id: Int
-    let category, job, instruction, image: String
+    let instruction: Instruction
+    let category, job, image: String
     let stack: [String]
     
     enum CodingKeys: String, CodingKey {

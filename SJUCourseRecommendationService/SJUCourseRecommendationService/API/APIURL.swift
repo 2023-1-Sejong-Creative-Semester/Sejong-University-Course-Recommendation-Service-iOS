@@ -17,6 +17,8 @@ enum APIURL {
     case curriculum
     case classifyJob
     case classifyJobIntroduce
+    case classifySubject
+    case classifySubjectIntroduce
     case roadmapMain
     case roadmapDetail
     case roadmapJob
@@ -55,12 +57,17 @@ enum APIURL {
         case .classifyJobIntroduce:
             urlComponents.path = "/classify/job/intro"
             return urlComponents.url!
+        case .classifySubject:
+            urlComponents.path = "/classify/subject"
+            return urlComponents.url!
+        case .classifySubjectIntroduce:
+            urlComponents.path = "/classify/subject/intro"
+            return urlComponents.url!
         case .roadmapMain:
             urlComponents.path = "/roadmap/main"
             return urlComponents.url!
         case .roadmapDetail:
             urlComponents.path = "/roadmap/detail"
-            urlComponents.queryItems = [URLQueryItem(name: "index", value: "\(id ?? 0)")]
             return urlComponents.url!
         case .roadmapJob:
             urlComponents.path = "/roadmap/job"
