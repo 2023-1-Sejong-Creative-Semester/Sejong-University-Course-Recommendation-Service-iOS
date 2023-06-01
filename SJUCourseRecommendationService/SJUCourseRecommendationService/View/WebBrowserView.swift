@@ -14,9 +14,27 @@ class WKWebViewModel: WKWebView, WKNavigationDelegate, ObservableObject {
     @Published var publishedIsLoading = false
     @Published var publishedProgress = 0.0
     
-    func initViewModel() {
+    override init(frame: CGRect, configuration: WKWebViewConfiguration) {
+        super.init(frame: frame, configuration: configuration)
+        initViewModel()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        initViewModel()
+    }
+    
+    deinit {
+        removeObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress))
+    }
+    
+    private func initViewModel() {
         self.navigationDelegate = self
         self.addObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress), options: .new, context: nil)
+    }
+    
+    private func removeObservers() {
+        removeObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress))
     }
     
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
@@ -30,13 +48,16 @@ class WKWebViewModel: WKWebView, WKNavigationDelegate, ObservableObject {
     }
     
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-        publishedProgress = self.estimatedProgress
+        DispatchQueue.main.async {
+            self.publishedProgress = self.estimatedProgress
+
+        }
     }
 }
 
 struct WebView: UIViewRepresentable {
     let url: URL
-    let webView: WKWebViewModel
+    weak var webView: WKWebViewModel?
 
     init(url: URL, webView: WKWebViewModel) {
         self.url = url
@@ -44,8 +65,14 @@ struct WebView: UIViewRepresentable {
     }
 
     func makeUIView(context: Context) -> WKWebView {
-        webView.load(URLRequest(url: url))
-        return webView as WKWebView
+        guard let web = webView else {
+            return WKWebView()
+        }
+        web.configuration.userContentController.removeScriptMessageHandler(forName: "message")
+        
+        web.load(URLRequest(url: url))
+        
+        return web as WKWebView
     }
 
     func updateUIView(_ uiView: WKWebView, context: Context) {
@@ -99,9 +126,6 @@ struct WebBrowserView: View {
         }
         .tint(Color("SejongColor"))
         .background(Color("BackgroundColor"))
-        .onAppear() {
-            wKWebViewModel.initViewModel()
-        }
     }
     
     @ViewBuilder
