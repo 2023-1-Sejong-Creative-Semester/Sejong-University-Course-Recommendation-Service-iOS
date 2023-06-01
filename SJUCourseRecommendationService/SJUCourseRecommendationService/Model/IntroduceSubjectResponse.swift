@@ -9,5 +9,5 @@ import Foundation
 
 struct IntroduceSubjectResponse: Codable {
     let element: Element
-    let job: [String]
+    let job: [Job]
 }

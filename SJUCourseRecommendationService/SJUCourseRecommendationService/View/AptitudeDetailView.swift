@@ -29,14 +29,6 @@ struct AptitudeDetailView: View {
     @State private var error: APIError?
     @State private var showError: Bool = false
     
-//    init(jobRequest: IntroduceJobRequest? = nil, subjectRequest: IntroduceSubjectRequest? = nil, introduceJob: IntroduceJobResponse? = nil, introduceSubject: IntroduceSubjectResponse? = nil, roadmapList: RoadmapJobs? = nil) {
-//        self.jobRequest = jobRequest
-//        self.subjectRequest = subjectRequest
-//        self.introduceJob = introduceJob
-//        self.introduceSubject = introduceSubject
-//        self.roadmapList = roadmapList
-//    }
-    
     var body: some View {
         GeometryReader { reader in
             ScrollView {
@@ -177,7 +169,6 @@ struct AptitudeDetailView: View {
                     subjectInformation(subject: subject.element)
                 case .subject:
                     jobList(job: subject.job)
-                    EmptyView()
                 }
             } else {
                 Spacer()
@@ -307,7 +298,13 @@ struct AptitudeDetailView: View {
         LazyVStack(pinnedViews: [.sectionHeaders]) {
             Section {
                 ForEach(subject, id: \.element.id) { sub in
-                    subLecture(subject: sub.element)
+                    NavigationLink {
+                        AptitudeDetailView(subjectRequest: IntroduceSubjectRequest(colleage: sub.element.collage, stack: sub.element.stack, category: sub.element.category?.first ?? "", semester: sub.element.semeter, department: sub.element.semeter, cName: sub.element.cName))
+                            .tint(Color("SejongColor"))
+                    } label: {
+                        subLecture(subject: sub.element)
+                    }
+                    .tint(.primary)
                 }
             } header: {
                 contentSelection()
@@ -318,27 +315,17 @@ struct AptitudeDetailView: View {
     }
     
     @ViewBuilder
-    func jobList(job: [String]) -> some View {
+    func jobList(job: [Job]) -> some View {
         LazyVStack(pinnedViews: [.sectionHeaders]) {
             Section {
-                ForEach(job, id: \.hashValue) { elem in
-                    VStack {
-                        HStack {
-                            Text(elem)
-                                .font(.title3)
-                                .fontWeight(.semibold)
-                                .padding(.vertical)
-                            
-                            
-                            Spacer()
-                        }
-                        .padding(.horizontal)
+                ForEach(job) { elem in
+                    NavigationLink {
+                        AptitudeDetailView(jobRequest: IntroduceJobRequest(job: elem.job, category: elem.category))
+                            .tint(Color("SejongColor"))
+                    } label: {
+                        subAptitudeJob(job: elem)
                     }
-                    .background(alignment: .bottom) {
-                        Rectangle()
-                            .fill(.secondary.opacity(colorScheme == .dark ? 0.5 : 1))
-                            .frame(height: 0.5)
-                    }
+                    .tint(.primary)
                 }
             } header: {
                 contentSelection()
@@ -346,11 +333,63 @@ struct AptitudeDetailView: View {
             }
         }
         .background(Color("BackgroundColor"))
+    }
+    
+    @ViewBuilder
+    func subAptitudeJob(job: Job) -> some View {
+        HStack {
+            AsyncImage(url: URL(string: job.image)) { img in
+                img
+                    .resizable()
+                    .scaledToFit()
+            } placeholder: {
+                ZStack {
+                    Color.secondary.opacity(0.5)
+                    
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .tint(Color("SejongColor"))
+                }
+            }
+            .frame(width: 100, height: 100)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .shadow(radius: 5)
+            .padding(.trailing)
+            
+            VStack(alignment: .leading, spacing: 5) {
+                Text(job.job)
+                    .font(.headline)
+                
+                Text(job.instruction.shortScript)
+                    .multilineTextAlignment(.leading)
+                    .font(.caption)
+                
+                ScrollView(.horizontal) {
+                    HStack {
+                        ForEach(job.stack, id: \.hashValue) { stack in
+                            titleTag(tag: stack)
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, 5)
+                    .padding(.vertical)
+                }
+            }
+            .padding(.vertical, 5)
+        }
+        .padding()
+        .background {
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color("ShapeBackgroundColor"))
+        }
+        .padding(.horizontal)
+        .padding(.top)
     }
     
     @ViewBuilder
     func subLecture(subject: Element) -> some View {
-        VStack(spacing: 10) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("\(subject.credit)학점")
                     .foregroundColor(.secondary)
@@ -370,15 +409,21 @@ struct AptitudeDetailView: View {
                 Spacer()
             }
             
-            Text(subject.instruction.longScript)
+            Text(subject.instruction.shortScript)
+                .multilineTextAlignment(.leading)
                 .font(.footnote)
             
-            HStack {
-                ForEach(subject.stack, id:\.hashValue) { stack in
-                    titleTag(tag: stack)
+            
+            ScrollView(.horizontal) {
+                HStack {
+                    ForEach(subject.stack, id:\.hashValue) { stack in
+                        titleTag(tag: stack)
+                    }
+                    
+                    Spacer()
                 }
-                
-                Spacer()
+                .padding(.horizontal, 5)
+                .padding(.vertical)
             }
         }
         .padding()

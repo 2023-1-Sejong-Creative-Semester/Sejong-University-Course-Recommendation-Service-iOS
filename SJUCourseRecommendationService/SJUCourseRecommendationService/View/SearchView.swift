@@ -464,10 +464,10 @@ struct SearchView: View {
                     ForEach(list.results) { job in
                         NavigationLink {
                             AptitudeDetailView(jobRequest: IntroduceJobRequest(job: job.job, category: job.category))
+                                .tint(Color("SejongColor"))
                         } label: {
                             subAptitudeJob(job: job)
                         }
-                        .tint(.primary)
                     }
                 }
             }
@@ -477,10 +477,10 @@ struct SearchView: View {
                     ForEach(list.subject, id: \.element.id) { subject in
                         NavigationLink {
                             AptitudeDetailView(subjectRequest: IntroduceSubjectRequest(colleage: currentCollege.rawValue, stack: subject.element.stack, category: currentJobCategory.rawValue, semester: subject.element.semeter, department: subject.element.semeter, cName: subject.element.cName))
+                                .tint(Color("SejongColor"))
                         } label: {
                             subAptitudeLecture(subject: subject.element)
                         }
-                        .tint(.primary)
                     }
                 }
             }
