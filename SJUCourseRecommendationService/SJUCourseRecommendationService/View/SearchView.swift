@@ -66,8 +66,8 @@ struct SearchView: View {
     @State private var currentCollege: Colleage = .softwareColleage
     @State private var currentStacks: Set<String> = ["C"]
     @State private var currentTrack: Track = .electronicTrack
-    @State private var currentSemester: Semester = .first
-    @State private var currentJobCategory: JobCategory = .webDeveloper
+    @State private var currentSemester: Set<Semester> = [.first]
+    @State private var currentJobCategory: Set<JobCategory> = [.webDeveloper]
     @State private var stack: Stack?
     
     var body: some View {
@@ -307,9 +307,16 @@ struct SearchView: View {
     
     @ViewBuilder
     func filterSemester(semester: Semester) -> some View {
-        filterButton(title: semester.rawValue, isSelected: semester == currentSemester) {
+        filterButton(title: semester.rawValue, isSelected: currentSemester.contains(semester)) {
             withAnimation(.easeInOut) {
-                currentSemester = semester
+                guard !currentSemester.contains(semester) || currentSemester.count != 1 else {
+                    return
+                }
+                
+                guard let _ = currentSemester.remove(semester) else {
+                    currentSemester.insert(semester)
+                    return
+                }
                 
                 fetchAction()
             }
@@ -318,9 +325,16 @@ struct SearchView: View {
     
     @ViewBuilder
     func filterJobCategory(category: JobCategory) -> some View {
-        filterButton(title: category.rawValue, isSelected: category == currentJobCategory) {
+        filterButton(title: category.rawValue, isSelected: currentJobCategory.contains(category)) {
             withAnimation(.easeInOut) {
-                currentJobCategory = category
+                guard !currentJobCategory.contains(category) || currentJobCategory.count != 1 else {
+                    return
+                }
+                
+                guard let _ = currentJobCategory.remove(category) else {
+                    currentJobCategory.insert(category)
+                    return
+                }
                 
                 fetchAction()
             }
@@ -424,26 +438,26 @@ struct SearchView: View {
                         }
                     case .semester:
                         ForEach(Semester.allCases, id: \.rawValue) { semester in
-                            if currentSemester == semester {
+                            if currentSemester.contains(semester) {
                                 filterSemester(semester: semester)
                             }
                         }
                         
                         ForEach(Semester.allCases, id: \.rawValue) { semester in
-                            if currentSemester != semester {
+                            if !currentSemester.contains(semester) {
                                 filterSemester(semester: semester)
                             }
                         }
                         
                     case .jobCategory:
                         ForEach(JobCategory.allCases, id: \.rawValue) { jobCategory in
-                            if currentJobCategory == jobCategory {
+                            if currentJobCategory.contains(jobCategory) {
                                 filterJobCategory(category: jobCategory)
                             }
                         }
                         
                         ForEach(JobCategory.allCases, id: \.rawValue) { jobCategory in
-                            if currentJobCategory != jobCategory {
+                            if !currentJobCategory.contains(jobCategory) {
                                 filterJobCategory(category: jobCategory)
                             }
                         }
@@ -476,7 +490,7 @@ struct SearchView: View {
                 LazyVStack(spacing: 0) {
                     ForEach(list.subject, id: \.element.id) { subject in
                         NavigationLink {
-                            AptitudeDetailView(subjectRequest: IntroduceSubjectRequest(colleage: currentCollege.rawValue, stack: subject.element.stack, category: currentJobCategory.rawValue, semester: subject.element.semeter, department: subject.element.semeter, cName: subject.element.cName))
+                            AptitudeDetailView(subjectRequest: IntroduceSubjectRequest(colleage: currentCollege.rawValue, stack: subject.element.stack, category: currentJobCategory.first?.rawValue ?? "", semester: subject.element.semeter, department: subject.element.semeter, cName: subject.element.cName))
                                 .tint(Color("SejongColor"))
                         } label: {
                             subAptitudeLecture(subject: subject.element)
@@ -612,7 +626,13 @@ struct SearchView: View {
     func fetchJobList() {
         Task {
             do {
-                let body = JobRequest(colleage: currentCollege.rawValue, stack: currentStacks, category: currentJobCategory.rawValue)
+                var categories = ""
+                currentJobCategory.forEach { category in
+                    categories += (category.rawValue + "|")
+                }
+                categories.removeLast()
+                
+                let body = JobRequest(colleage: currentCollege.rawValue, stack: currentStacks, category: categories)
                 
                 var request = URLRequest(url: APIURL.classifyJob.url())
                 request.httpMethod = "POST"
@@ -643,7 +663,19 @@ struct SearchView: View {
     func fetchSubjectList() {
         Task {
             do {
-                let body = SubjectRequest(colleage: currentCollege.rawValue, stack: currentStacks, category: currentJobCategory.rawValue, semester: currentSemester.rawValue)
+                var semesters = ""
+                currentSemester.forEach { semester in
+                    semesters += (semester.rawValue + "|")
+                }
+                semesters.removeLast()
+                
+                var categories = ""
+                currentJobCategory.forEach { category in
+                    categories += (category.rawValue + "|")
+                }
+                categories.removeLast()
+                
+                let body = SubjectRequest(colleage: currentCollege.rawValue, stack: currentStacks, category: categories, semester: semesters)
                 
                 var request = URLRequest(url: APIURL.classifySubject.url())
                 request.httpMethod = "POST"
