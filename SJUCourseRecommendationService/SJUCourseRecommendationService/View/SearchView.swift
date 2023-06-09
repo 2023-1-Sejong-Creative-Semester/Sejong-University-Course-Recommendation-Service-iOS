@@ -18,20 +18,13 @@ struct SearchView: View {
     enum FilterContent: String {
         case colleage = "대학"
         case language = "주언어"
-        case track = "트랙"
         case semester = "학기"
         case jobCategory = "직업"
     }
     
     enum Colleage: String {
         case softwareColleage = "소프트웨어융합대학"
-        case electronicColleage = "전자정보통신공학대학"
-    }
-    
-    enum Track: String, CaseIterable {
-        case electronicTrack = "전자트랙"
-        case informationTrack = "정보트랙"
-        case communicationTrack = "통신트랙"
+        case electronicColleage = "전자정보공학대학"
     }
     
     enum Semester: String, CaseIterable {
@@ -52,6 +45,8 @@ struct SearchView: View {
         case dataEngineer = "데이터"
         case gameDeveloper = "게임"
         case security = "보안"
+        case electronic = "전자"
+        case information = "정보/통신"
     }
     
     @Environment(\.colorScheme) var colorScheme
@@ -65,7 +60,6 @@ struct SearchView: View {
     @State private var subjectList: SubjectResponse?
     @State private var currentCollege: Colleage = .softwareColleage
     @State private var currentStacks: Set<String> = ["C"]
-    @State private var currentTrack: Track = .electronicTrack
     @State private var currentSemester: Set<Semester> = [.first]
     @State private var currentJobCategory: Set<JobCategory> = [.webDeveloper]
     @State private var stack: Stack?
@@ -187,7 +181,9 @@ struct SearchView: View {
                         withAnimation(.easeInOut) {
                             showSelectColleage = false
                             currentCollege = .electronicColleage
-                            fetchStacks()
+                            currentStacks.removeAll()
+                            currentJobCategory.removeAll()
+                            currentJobCategory.insert(.electronic)
                             
                             fetchAction()
                         }
@@ -295,17 +291,6 @@ struct SearchView: View {
     }
     
     @ViewBuilder
-    func filterTrack(track: Track) -> some View {
-        filterButton(title: track.rawValue, isSelected: track == currentTrack) {
-            withAnimation(.easeInOut) {
-                currentTrack = track
-                
-                fetchAction()
-            }
-        }
-    }
-    
-    @ViewBuilder
     func filterSemester(semester: Semester) -> some View {
         filterButton(title: semester.rawValue, isSelected: currentSemester.contains(semester)) {
             withAnimation(.easeInOut) {
@@ -333,8 +318,11 @@ struct SearchView: View {
                 
                 guard let _ = currentJobCategory.remove(category) else {
                     currentJobCategory.insert(category)
+                    fetchAction()
                     return
                 }
+                
+                print(currentJobCategory)
                 
                 fetchAction()
             }
@@ -345,17 +333,8 @@ struct SearchView: View {
     func filterBar() -> some View {
         VStack(spacing: 0) {
             filterContentBar(filterContent: .colleage)
-            
-            switch currentCollege {
-            case .softwareColleage:
+            if currentCollege == .softwareColleage {
                 filterContentBar(filterContent: .language)
-                    .background(alignment: .top) {
-                        Rectangle()
-                            .fill(.secondary)
-                            .frame(height: 0.25)
-                    }
-            case .electronicColleage:
-                filterContentBar(filterContent: .track)
                     .background(alignment: .top) {
                         Rectangle()
                             .fill(.secondary)
@@ -372,14 +351,13 @@ struct SearchView: View {
                     }
             }
             
-            if currentCollege == .softwareColleage {
-                filterContentBar(filterContent: .jobCategory)
-                    .background(alignment: .top) {
-                        Rectangle()
-                            .fill(.secondary)
-                            .frame(height: 0.25)
-                    }
-            }
+            
+            filterContentBar(filterContent: .jobCategory)
+                .background(alignment: .top) {
+                    Rectangle()
+                        .fill(.secondary)
+                        .frame(height: 0.25)
+                }
         }
         .background(Color("ShapeBackgroundColor"))
     }
@@ -424,18 +402,6 @@ struct SearchView: View {
                                 Spacer()
                             }
                         }
-                    case .track:
-                        ForEach(Track.allCases, id: \.rawValue) { track in
-                            if currentTrack == track {
-                                filterTrack(track: track)
-                            }
-                        }
-                        
-                        ForEach(Track.allCases, id: \.rawValue) { track in
-                            if currentTrack != track {
-                                filterTrack(track: track)
-                            }
-                        }
                     case .semester:
                         ForEach(Semester.allCases, id: \.rawValue) { semester in
                             if currentSemester.contains(semester) {
@@ -450,17 +416,41 @@ struct SearchView: View {
                         }
                         
                     case .jobCategory:
-                        ForEach(JobCategory.allCases, id: \.rawValue) { jobCategory in
-                            if currentJobCategory.contains(jobCategory) {
-                                filterJobCategory(category: jobCategory)
+                        switch currentCollege {
+                        case .softwareColleage:
+                            let categories = JobCategory.allCases.filter { category in
+                                return category != .electronic && category != .information
+                            }
+                            
+                            ForEach(categories, id: \.rawValue) { jobCategory in
+                                if currentJobCategory.contains(jobCategory) {
+                                    filterJobCategory(category: jobCategory)
+                                }
+                            }
+                            
+                            ForEach(categories, id: \.rawValue) { jobCategory in
+                                if !currentJobCategory.contains(jobCategory) {
+                                    filterJobCategory(category: jobCategory)
+                                }
+                            }
+                        case .electronicColleage:
+                            let categories = JobCategory.allCases.filter { category in
+                                return category == .electronic || category == .information
+                            }
+                            
+                            ForEach(categories, id: \.rawValue) { jobCategory in
+                                if currentJobCategory.contains(jobCategory) {
+                                    filterJobCategory(category: jobCategory)
+                                }
+                            }
+                            
+                            ForEach(categories, id: \.rawValue) { jobCategory in
+                                if !currentJobCategory.contains(jobCategory) {
+                                    filterJobCategory(category: jobCategory)
+                                }
                             }
                         }
                         
-                        ForEach(JobCategory.allCases, id: \.rawValue) { jobCategory in
-                            if !currentJobCategory.contains(jobCategory) {
-                                filterJobCategory(category: jobCategory)
-                            }
-                        }
                     }
                 }
                 .font(.subheadline)
@@ -532,8 +522,9 @@ struct SearchView: View {
             }
             
             Text(subject.instruction.shortScript)
-                .font(.footnote)
+                .font(.caption)
                 .multilineTextAlignment(.leading)
+                .lineLimit(2)
             
             HStack {
                 ForEach(subject.stack, id:\.hashValue) { stack in
@@ -579,6 +570,8 @@ struct SearchView: View {
                 
                 Text(job.instruction.shortScript)
                     .font(.caption)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(2)
                 
                 ScrollView(.horizontal) {
                     HStack {
@@ -633,6 +626,9 @@ struct SearchView: View {
                 categories.removeLast()
                 
                 let body = JobRequest(colleage: currentCollege.rawValue, stack: currentStacks, category: categories)
+                
+                
+                print(body)
                 
                 var request = URLRequest(url: APIURL.classifyJob.url())
                 request.httpMethod = "POST"
@@ -733,7 +729,7 @@ struct SearchView: View {
 struct SearchView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
-            SearchView(searchType: .subject)
+            SearchView(searchType: .job)
                 .navigationBarTitleDisplayMode(.inline)
         }
     }
